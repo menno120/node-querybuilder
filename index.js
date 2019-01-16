@@ -574,7 +574,7 @@ QueryBuilder.prototype.prepare = function() {
 	// DEBUG
 	if (this.debug) {
 		console.group("QueryBuilder");
-		fns.debug("Builder:", this.builder);
+		this.debug("Builder:", this.builder);
 	}
 
 	// Create start of the SQL query
@@ -610,7 +610,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		fns.debug("Query [INIT]", sql);
+		this.debug("Query [INIT]", sql);
 	}
 
 	// Create array with all the where clauses seperated
@@ -645,7 +645,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		fns.debug("Query [WHERE]", where);
+		this.debug("Query [WHERE]", where);
 	}
 
 	// Create order
@@ -664,7 +664,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		fns.debug("Query [ORDER]", order);
+		this.debug("Query [ORDER]", order);
 	}
 
 	// Create limit
@@ -680,7 +680,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		fns.debug("Query [LIMIT]", limit);
+		this.debug("Query [LIMIT]", limit);
 	}
 
 	// Merge it all toghether
@@ -688,7 +688,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		fns.debug("Query [COMPLETE]", this.query);
+		this.debug("Query [COMPLETE]", this.query);
 		console.groupEnd();
 	}
 
