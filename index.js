@@ -17,7 +17,7 @@ let dbConnection;
  * @param {string} password 	MySQL server password
  * @param {string} database 	MySQL server database
  */
-var DatabaseConnection = function(host, user, password, database) {
+var SetupDatabaseConnection = function(host, user, password, database) {
 
 	if(host === null) {
 		throw new Error("Host cannot be NULL");
@@ -737,4 +737,7 @@ QueryBuilder.prototype.debug = function() {
 };
 
 // Export
-module.exports = QueryBuilder;
+module.exports = { 
+	QueryBuilder: QueryBuilder, 
+	SetupDatabaseConnection: SetupDatabaseConnection 
+};
