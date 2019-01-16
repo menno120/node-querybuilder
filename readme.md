@@ -6,7 +6,7 @@ Simple to use QueryBuilder
 ## Instalation:
 
 ```
-> npm install git+https://git@github.com:menno120/node-querybuilder.git
+> npm install git+https://github.com/menno120/node-querybuilder.git
 ```
 
 ## Example:
