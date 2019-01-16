@@ -7,6 +7,7 @@ let dbConnection;
 // @todo: subquery
 // @todo: transaction
 // @todo: logging
+// @todo: fulltext
 
 var DatabaseConnection = function(host,user,password,database) {
 	dbConnection = mysql.createConnection({
@@ -213,7 +214,7 @@ QueryBuilder.prototype.truncate = function(table) {
 
 /**
  * Adds a where clause to the SQL statement
- * Note: fopr between and fulltext where clauses use the between() and fulltext() functions
+ * Note: for between and fulltext where clauses use the between() and fulltext() functions
  *
  * @param  {string} 	key      		The key you want to check
  * @param  {string} 	value    		The value you want to check against
@@ -694,7 +695,7 @@ QueryBuilder.prototype.execute = function(callback) {
 		console.log("QueryBuilder - [EXECUTE]", this.query);
 	}
 
-	fns.db.query(this.query, (error, result) => {
+	dbConnection.query(this.query, (error, result) => {
 		if (typeof callback === "function") {
 			callback(error, result);
 		} else {

@@ -2,6 +2,13 @@
 
 Simple to use QueryBuilder
 
+
+## Instalation:
+
+```
+> npm install git+https://git@github.com:menno120/node-querybuilder.git
+```
+
 ## Example:
 
 ```js
