@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const mysql = require("mysql");
 
-let dbConnection;
+const dbConnection;
 
 // @todo: orderByCase
 // @todo: getLastInsertedId - console.log(result.insertId);
