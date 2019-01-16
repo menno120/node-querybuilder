@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const mysql = require("mysql");
+const chalk = require("chalk");
 
 class DatabaseConnection {
 	constructor() {
