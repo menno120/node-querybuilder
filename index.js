@@ -574,7 +574,7 @@ QueryBuilder.prototype.prepare = function() {
 	// DEBUG
 	if (this.debug) {
 		console.group("QueryBuilder");
-		this.debug("Builder:", this.builder);
+		this.message("Builder:", this.builder);
 	}
 
 	// Create start of the SQL query
@@ -610,7 +610,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		this.debug("Query [INIT]", sql);
+		this.message("Query [INIT]", sql);
 	}
 
 	// Create array with all the where clauses seperated
@@ -645,7 +645,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		this.debug("Query [WHERE]", where);
+		this.message("Query [WHERE]", where);
 	}
 
 	// Create order
@@ -664,7 +664,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		this.debug("Query [ORDER]", order);
+		this.message("Query [ORDER]", order);
 	}
 
 	// Create limit
@@ -680,7 +680,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		this.debug("Query [LIMIT]", limit);
+		this.message("Query [LIMIT]", limit);
 	}
 
 	// Merge it all toghether
@@ -688,7 +688,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		this.debug("Query [COMPLETE]", this.query);
+		this.message("Query [COMPLETE]", this.query);
 		console.groupEnd();
 	}
 
@@ -735,8 +735,8 @@ QueryBuilder.prototype.execute = function(callback) {
 	});
 };
 
-QueryBuilder.prototype.debug = function() {
-	console.group("----------- " + chalk.yellowBright.bold("[DEBUG]") + " -----------");
+QueryBuilder.prototype.message = function() {
+	console.group("----------- " + chalk.yellowBright.bold("[QueryBuilder]") + " -----------");
 	for (let i = 0; i < arguments.length; i++) {
 		console.warn(arguments[i]);
 	}
