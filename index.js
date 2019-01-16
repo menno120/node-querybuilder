@@ -125,6 +125,39 @@ QueryBuilder.prototype.select = function(table, keys, names) {
 };
 
 /**
+ * Fetch a row from the database
+ *
+ * @param  {string} 	table 		Name of the table you want to select something from
+ * @param  {string}  	keys  		The key you want to count
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.count = function(table, key) {
+	const validation = Joi.validate(
+		{ keys, table, names },
+		Joi.object().keys({
+			table: Joi.string()
+				.min(1)
+				.required(),
+			key: Joi.string()
+				.min(1)
+				.required()
+		})
+	);
+
+	if (validation.error) {
+		console.error(validation.error);
+		return this;
+	} else {
+		this.builder.table = table;
+		this.builder.keys = [key];
+		this.builder.type = "count";
+
+		return this;
+	}
+};
+
+/**
  * Adds a row into the database
  *
  * @param  {string} 					table 		Name of the table you want to select something from
@@ -601,6 +634,9 @@ QueryBuilder.prototype.prepare = function() {
 		case "delete":
 			sql = "DELETE FROM `" + this.builder.table + "`";
 
+			break;
+		case "count":
+			sql = "SELECT COUNT(`" + this.builder.keys.join("`,`") + "`) as count FROM `" + this.builder.table + "`";
 			break;
 		case "truncate":
 			sql = "TRUNCATE `" + this.builder.table + "`";
