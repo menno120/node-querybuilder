@@ -9,13 +9,36 @@ let dbConnection;
 // @todo: logging
 // @todo: fulltext
 
-var DatabaseConnection = function(host,user,password,database) {
+/**
+ * Creates the required database connection for the QueryBuilder execute function
+ *
+ * @param {string} host     	MySQL server host
+ * @param {string} user     	MySQL server user
+ * @param {string} password 	MySQL server password
+ * @param {string} database 	MySQL server database
+ */
+var DatabaseConnection = function(host, user, password, database) {
+
+	if(host === null) {
+		throw new Error("Host cannot be NULL");
+	} 
+	if(user === null) {
+		throw new Error("User cannot be NULL");
+	} 
+	if(password === null) {
+		throw new Error("Password cannot be NULL");
+	} 
+	if(database === null) {
+		throw new Error("Database cannot be NULL");
+	}
+
 	dbConnection = mysql.createConnection({
 		host: host,
 		user: user,
 		password: password,
 		database: database
 	});
+
 	dbConnection.connect(error => {
 		if (error !== null) {
 			throw error;
@@ -715,5 +738,3 @@ QueryBuilder.prototype.debug() {
 
 // Export
 module.exports = QueryBuilder;
-
-module.exports = 
