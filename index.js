@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const mysql = require("mysql");
 
 let dbConnection;
 
