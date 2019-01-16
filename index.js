@@ -727,14 +727,14 @@ QueryBuilder.prototype.execute = function(callback) {
 	});
 };
 
-QueryBuilder.prototype.debug() {
+QueryBuilder.prototype.debug = function() {
 	console.group("----------- " + chalk.yellowBright.bold("[DEBUG]") + " -----------");
 	for (let i = 0; i < arguments.length; i++) {
 		console.warn(arguments[i]);
 	}
 	console.groupEnd();
 	console.log();
-}
+};
 
 // Export
 module.exports = QueryBuilder;
