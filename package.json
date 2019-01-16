@@ -1,10 +1,10 @@
 {
   "name": "querybuilder",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "MySQL QueryBuilder",
   "main": "index.js",
   "scripts": {
-    "test": "index.test.js"
+    "test": "node index.test.js"
   },
   "author": "Menno (https://github.com/menno120)",
   "license": "ISC",

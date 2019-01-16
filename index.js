@@ -1,14 +1,20 @@
 const Joi = require("joi");
 const mysql = require("mysql");
 
-const dbConnection;
+class DatabaseConnection {
+	constructor() {
+		this.connection = null;
+	}
+}
 
-// @todo: orderByCase
-// @todo: getLastInsertedId - console.log(result.insertId);
-// @todo: subquery
-// @todo: transaction
-// @todo: logging
-// @todo: fulltext
+/**
+ * Get the current active database connection
+ *
+ * @return {Object} - MySQL database connection
+ */
+DatabaseConnection.prototype.get = function() { 
+	return this.connection; 
+}
 
 /**
  * Creates the required database connection for the QueryBuilder execute function
@@ -18,8 +24,7 @@ const dbConnection;
  * @param {string} password 	MySQL server password
  * @param {string} database 	MySQL server database
  */
-var SetupDatabaseConnection = function(host, user, password, database) {
-
+DatabaseConnection.prototype.connect = function(host, user, password, database) {
 	if(host === null) {
 		throw new Error("Host cannot be NULL");
 	} 
@@ -33,14 +38,14 @@ var SetupDatabaseConnection = function(host, user, password, database) {
 		throw new Error("Database cannot be NULL");
 	}
 
-	dbConnection = mysql.createConnection({
+	this.connection = mysql.createConnection({
 		host: host,
 		user: user,
 		password: password,
 		database: database
 	});
 
-	dbConnection.connect(error => {
+	this.connection.connect(error => {
 		if (error !== null) {
 			throw error;
 		} else {
@@ -48,6 +53,8 @@ var SetupDatabaseConnection = function(host, user, password, database) {
 		}
 	});
 }
+
+const dbConnection = new DatabaseConnection();
 
 /**
  * QueryBuilder constructor
@@ -719,7 +726,7 @@ QueryBuilder.prototype.execute = function(callback) {
 		console.log("QueryBuilder - [EXECUTE]", this.query);
 	}
 
-	dbConnection.query(this.query, (error, result) => {
+	dbConnection.get().query(this.query, (error, result) => {
 		if (typeof callback === "function") {
 			callback(error, result);
 		} else {
@@ -740,5 +747,5 @@ QueryBuilder.prototype.debug = function() {
 // Export
 module.exports = { 
 	QueryBuilder: QueryBuilder, 
-	SetupDatabaseConnection: SetupDatabaseConnection 
+	DatabaseConnection: dbConnection
 };

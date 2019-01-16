@@ -13,7 +13,7 @@ Simple to use QueryBuilder
 
 ```js
 
-let results = new QueryBuilder()
+new QueryBuilder()
 	.select("users", ["id","username","email"])
 	.where("id", 1)
 	.andWhere("email", "user@example.com")
