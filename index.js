@@ -8,14 +8,18 @@ class DatabaseConnection {
 	}
 }
 
+const operators = {
+	comparison: ["=", "<", ">", "<=", ">=", "!=", "<>", "<=>"]
+};
+
 /**
  * Get the current active database connection
  *
  * @return {Object} - MySQL database connection
  */
-DatabaseConnection.prototype.get = function() { 
-	return this.connection; 
-}
+DatabaseConnection.prototype.get = function() {
+	return this.connection;
+};
 
 /**
  * Creates the required database connection for the QueryBuilder execute function
@@ -25,17 +29,22 @@ DatabaseConnection.prototype.get = function() {
  * @param {string} password 	MySQL server password
  * @param {string} database 	MySQL server database
  */
-DatabaseConnection.prototype.connect = function(host, user, password, database) {
-	if(host === null) {
+DatabaseConnection.prototype.connect = function(
+	host,
+	user,
+	password,
+	database
+) {
+	if (host === null) {
 		throw new Error("Host cannot be NULL");
-	} 
-	if(user === null) {
+	}
+	if (user === null) {
 		throw new Error("User cannot be NULL");
-	} 
-	if(password === null) {
+	}
+	if (password === null) {
 		throw new Error("Password cannot be NULL");
-	} 
-	if(database === null) {
+	}
+	if (database === null) {
 		throw new Error("Database cannot be NULL");
 	}
 
@@ -53,7 +62,7 @@ DatabaseConnection.prototype.connect = function(host, user, password, database) 
 			console.info("Database connected!");
 		}
 	});
-}
+};
 
 const dbConnection = new DatabaseConnection();
 
@@ -76,7 +85,8 @@ var QueryBuilder = function(debug = false) {
 			offset: null,
 			amount: null
 		},
-		order: []
+		order: [],
+		joins: []
 	};
 	this.debug = debug; // Show debug info
 
@@ -106,7 +116,11 @@ QueryBuilder.prototype.select = function(table, keys, names) {
 			),
 			names: Joi.array()
 				.items(Joi.string().min(1))
-				.when("keys", { is: keys.length > 1, then: Joi.array().length(keys.length), otherwise: Joi.optional() })
+				.when("keys", {
+					is: keys.length > 1,
+					then: Joi.array().length(keys.length),
+					otherwise: Joi.optional()
+				})
 		})
 	);
 
@@ -288,7 +302,12 @@ QueryBuilder.prototype.truncate = function(table) {
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.where = function(key, value, operator = "=", type = null) {
+QueryBuilder.prototype.where = function(
+	key,
+	value,
+	operator = "=",
+	type = null
+) {
 	const validation = Joi.validate(
 		{ key, value, operator, type },
 		Joi.object().keys({
@@ -389,7 +408,9 @@ QueryBuilder.prototype.between = function(key, min, max, type = null) {
 		throw new Error(validation.error);
 	} else {
 		if (type === null && this.builder.where.length > 0) {
-			throw new Error("Please specify the type of the between (OR | AND)");
+			throw new Error(
+				"Please specify the type of the between (OR | AND)"
+			);
 		}
 
 		this.builder.where.push({
@@ -426,12 +447,6 @@ QueryBuilder.prototype.andBetween = function(key, min, max) {
 };
 
 /**
- * ...
- *
- * @param  {string} 	key      		The key you want to check
- * @param  {int} 	    min    		    The minium value for the given key
- * @param  {int} 	    max		        The maximum value for the given key
- *
  * @return {object} - Current instance of the QueryBuilder
  */
 QueryBuilder.prototype.fulltext = function() {
@@ -460,40 +475,42 @@ QueryBuilder.prototype.andFulltext = function() {
 };
 
 /**
- * Add a left join to the SQL query
+ * Add a join to the SQL query
  *
  * @param  {string} 	table    	The table you want to join
  * @param  {string} 	key      	The key to compare
  * @param  {string} 	value    	The value to compare the key to
  * @param  {string} 	operator	Check operator
+ * @param  {string}		joinType	Type of join (left,right,inner)
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-
-QueryBuilder.prototype.leftJoin = function(table, key, value, operator) {
+QueryBuilder.prototype.join = function(table, key, value, operator, joinType) {
 	const validation = Joi.validate(
-		{ keys, table },
+		{ key, table, value, operator, joinType },
 		Joi.object().keys({
+			table: Joi.string()
+				.min(1)
+				.required(),
 			key: Joi.any()
 				.valid(this.builder.keys)
 				.required(),
-			min: Joi.number()
-				.integer()
+			value: Joi.any().required(),
+			operator: Joi.any()
+				.valid(operators.comparison)
 				.required(),
-			max: Joi.number()
-				.integer()
-				.required(),
-			type: Joi.any()
-				.valid(["OR", "AND", null])
+			joinType: Joi.string()
+				.valid(["left", "right", "inner"])
 				.required()
 		})
 	);
 
 	if (validation.error) {
+		this.error(validation.error);
 		throw new Error(validation.error);
 	} else {
 		this.builder.joins.push({
-			pos: "left",
+			pos: joinType,
 			table: table,
 			key: key,
 			value: value,
@@ -505,23 +522,45 @@ QueryBuilder.prototype.leftJoin = function(table, key, value, operator) {
 };
 
 /**
- * ...
+ * Add a left join to the SQL query
+ *
+ * @param  {string} 	table    			The table you want to join
+ * @param  {string} 	key      			The key to compare
+ * @param  {string} 	value    			The value to compare the key to
+ * @param  {string} 	[operator = '=']	Check operator
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.rightJoin = function() {
-	console.warn("This function isn't implemented yet!");
-	return this;
+QueryBuilder.prototype.leftJoin = function(table, key, value, operator = "=") {
+	return this.join(table, key, value, operator, "left");
 };
 
 /**
- * ...
+ * Add a right join to the SQL query
+ *
+ * @param  {string} 	table    			The table you want to join
+ * @param  {string} 	key      			The key to compare
+ * @param  {string} 	value    			The value to compare the key to
+ * @param  {string} 	[operator = '=']	Check operator
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.innerJoin = function() {
-	console.warn("This function isn't implemented yet!");
-	return this;
+QueryBuilder.prototype.rightJoin = function(table, key, value, operator = "=") {
+	return this.join(table, key, value, operator, "right");
+};
+
+/**
+ * Add a inner join to the SQL query
+ *
+ * @param  {string} 	table    			The table you want to join
+ * @param  {string} 	key      			The key to compare
+ * @param  {string} 	value    			The value to compare the key to
+ * @param  {string} 	[operator = '=']	Check operator
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.innerJoin = function(table, key, value, operator = "=") {
+	return this.join(table, key, value, operator, "inner");
 };
 
 /**
@@ -533,7 +572,9 @@ QueryBuilder.prototype.orderBy = function(key, sortOrder = "ASC") {
 	const validation = Joi.validate(
 		{ key, sortOrder },
 		Joi.object().keys({
-			key: Joi.string().valid(this.builder.keys),
+			key: Joi.string()
+				.min(1)
+				.required(), // .valid(this.builder.keys),
 			sortOrder: Joi.any()
 				.valid(["ASC", "DESC"])
 				.required()
@@ -614,7 +655,12 @@ QueryBuilder.prototype.prepare = function() {
 	// Create start of the SQL query
 	switch (this.builder.type) {
 		case "select":
-			sql = "SELECT `" + this.builder.keys.join("`,`") + "` FROM `" + this.builder.table + "`";
+			sql =
+				"SELECT `" +
+				this.builder.keys.join("`,`") +
+				"` FROM `" +
+				this.builder.table +
+				"`";
 			break;
 		case "insert":
 			sql =
@@ -628,7 +674,11 @@ QueryBuilder.prototype.prepare = function() {
 
 			break;
 		case "update":
-			sql = "UPDATE `" + this.builder.table + "` SET" + this.builder.keys.join(",");
+			sql =
+				"UPDATE `" +
+				this.builder.table +
+				"` SET" +
+				this.builder.keys.join(",");
 
 			break;
 		case "delete":
@@ -636,7 +686,12 @@ QueryBuilder.prototype.prepare = function() {
 
 			break;
 		case "count":
-			sql = "SELECT COUNT(`" + this.builder.keys.join("`,`") + "`) as count FROM `" + this.builder.table + "`";
+			sql =
+				"SELECT COUNT(`" +
+				this.builder.keys.join("`,`") +
+				"`) as count FROM `" +
+				this.builder.table +
+				"`";
 
 			break;
 		case "truncate":
@@ -649,6 +704,34 @@ QueryBuilder.prototype.prepare = function() {
 	// DEBUG
 	if (this.debug) {
 		this.message("Query [INIT]", sql);
+	}
+
+	let joinClauses = [];
+
+	this.builder.joins.forEach((joinClause, x) => {
+		joinClauses.push(
+			joinClause.pos.toUpperCase() +
+				" JOIN `" +
+				joinClause.table +
+				"` ON ` " +
+				joinClause.table +
+				"." +
+				joinClause.key +
+				"` " +
+				joinClause.operator +
+				" `" +
+				(joinClause.value.includes(".")
+					? joinClause.value
+					: this.builder.table + "." + joinClause.value) +
+				"`"
+		);
+	});
+
+	join = joinClauses.join(" ");
+
+	// DEBUG
+	if (this.debug) {
+		this.message("Query [JOINS]", joinClauses, sql);
 	}
 
 	// Create array with all the where clauses seperated
@@ -670,7 +753,9 @@ QueryBuilder.prototype.prepare = function() {
 		where += "(";
 
 		let tmp = clauses.map((clause, i) => {
-			return "`" + clause.key + "` " + clause.operator + " " + clause.value;
+			return (
+				"`" + clause.key + "` " + clause.operator + " " + clause.value
+			);
 		});
 		where += tmp.join(" AND ");
 
@@ -710,7 +795,10 @@ QueryBuilder.prototype.prepare = function() {
 		limit = "LIMIT " + this.builder.limit.offset;
 	}
 	if (this.builder.limit.amount !== null) {
-		if (this.builder.limit.offset === null && this.builder.limit.amount !== null) {
+		if (
+			this.builder.limit.offset === null &&
+			this.builder.limit.amount !== null
+		) {
 			throw new Error("You can't set an amount without an offset");
 		}
 		limit += ", " + this.builder.limit.amount;
@@ -754,6 +842,7 @@ QueryBuilder.prototype.prepare = function() {
 
 /**
  * Executes the query
+ * Note: request the database connection to be setup via the DatabaseConnection.connect() function
  *
  * @param {ExecuteCallback} callback -
  *
@@ -774,7 +863,11 @@ QueryBuilder.prototype.execute = function(callback) {
 };
 
 QueryBuilder.prototype.message = function() {
-	console.group("----------- " + chalk.yellowBright.bold("[QueryBuilder]") + " -----------");
+	console.group(
+		"----------- " +
+			chalk.yellowBright.bold("[QueryBuilder]") +
+			" -----------"
+	);
 	for (let i = 0; i < arguments.length; i++) {
 		console.warn(arguments[i]);
 	}
@@ -782,8 +875,14 @@ QueryBuilder.prototype.message = function() {
 	console.log();
 };
 
+QueryBuilder.prototype.error = function(err) {
+	console.log(chalk.bgRed.bold.white("ERROR:"));
+	console.error(err);
+	console.log();
+};
+
 // Export
-module.exports = { 
-	QueryBuilder: QueryBuilder, 
+module.exports = {
+	QueryBuilder: QueryBuilder,
 	DatabaseConnection: dbConnection
 };
