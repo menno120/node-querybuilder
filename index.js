@@ -829,8 +829,8 @@ QueryBuilder.prototype.prepare = function() {
 					clause.key +
 					"` " +
 					clause.operator +
-					" " +
-					clause.value
+					" " + (typeof clause.value === "string" ? ("'" + clause.value + "'") : clause.value)
+					
 				);
 			}
 		});
