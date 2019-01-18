@@ -2,19 +2,19 @@
 
 Simple to use QueryBuilder
 
-
 ## Instalation:
 
 ```
 > npm install git+https://github.com/menno120/node-querybuilder.git
 ```
 
-## Example:
+## Examples:
+
+**select statement**
 
 ```js
-
 new QueryBuilder()
-	.select("users", ["id","username","email"])
+	.select("users", ["id", "username", "email"])
 	.where("id", 1)
 	.andWhere("email", "user@example.com")
 	.orWhere("ud", 2)
@@ -25,9 +25,25 @@ new QueryBuilder()
 	.prepare()
 	.execute((error, result) => {
 		if (error !== null) {
-			// Error message here ...
+			// Error handling code here ...
 		} else {
-			// The results variable will contain the results
+			// Results ...
+		}
+	});
+```
+
+**count statement**
+
+```js
+new QueryBuilder()
+	.count("users", "id")
+	.where("username", "John Doe")
+	.prepare()
+	.execute((error, result) => {
+		if (error !== null) {
+			// Error handling code here ...
+		} else {
+			// Results ...
 		}
 	});
 ```

@@ -11,6 +11,10 @@ class DatabaseConnection {
 const operators = {
 	comparison: ["=", "<", ">", "<=", ">=", "!=", "<>", "<=>"]
 };
+const FULLTEXT_MODES = {
+	NATURAL_LANGUAGE_MODE: 1,
+	BOOLEAN_MODE: 2
+};
 
 /**
  * Get the current active database connection
@@ -313,7 +317,9 @@ QueryBuilder.prototype.where = function(
 		Joi.object().keys({
 			key: Joi.string().required(),
 			value: Joi.any().required(),
-			operator: Joi.any().required(),
+			operator: Joi.any()
+				.valid(operators.comparison)
+				.required(),
 			type: Joi.any()
 				.valid(["OR", "AND", null])
 				.required()
@@ -385,18 +391,17 @@ QueryBuilder.prototype.andWhere = function(key, value, operator = "=") {
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.between = function(key, min, max, type = null) {
+QueryBuilder.prototype.whereBetween = function(key, min, max, type = null) {
 	const validation = Joi.validate(
-		{ keys, table },
+		{ key, min, max, type },
 		Joi.object().keys({
-			key: Joi.any()
-				.valid(this.builder.keys)
-				.required(),
+			key: Joi.string().required(),
 			min: Joi.number()
 				.integer()
 				.required(),
 			max: Joi.number()
 				.integer()
+				.greater(Joi.ref("min"))
 				.required(),
 			type: Joi.any()
 				.valid(["OR", "AND", null])
@@ -429,7 +434,7 @@ QueryBuilder.prototype.between = function(key, min, max, type = null) {
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.orBetween = function(key, min, max) {
+QueryBuilder.prototype.orWhereBetween = function(key, min, max) {
 	return this.between(key, min, max, "OR");
 };
 
@@ -442,36 +447,91 @@ QueryBuilder.prototype.orBetween = function(key, min, max) {
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.andBetween = function(key, min, max) {
+QueryBuilder.prototype.andWhereBetween = function(key, min, max) {
 	return this.between(key, min, max, "AND");
 };
 
 /**
+ * Adds a fulltext where statement to the SQL query
+ *
+ * @param  {string} 			key      		The key you want to check, example: 'title,body'
+ * @param  {string} 			value    		The keywords to search for
+ * @param  {FULLTEXT_MODES} 	mode		    The fulltext mode (NATURAL LANGUAGE or BOOLEAN)
+ * @param  {type}				type			Type of where clause ('OR','AND')
+ *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.fulltext = function() {
-	console.warn("This function isn't implemented yet!");
+QueryBuilder.prototype.whereFulltext = function(key, value, mode, type = null) {
+	const validation = Joi.validate(
+		{ key, value, mode, type },
+		Joi.object().keys({
+			key: Joi.string().required(),
+			value: Joi.string().required(),
+			mode: Joi.any()
+				.valid([
+					FULLTEXT_MODES.NATURAL_LANGUAGE_MODE,
+					FULLTEXT_MODES.BOOLEAN_MODE
+				])
+				.required(),
+			type: Joi.any()
+				.valid(["OR", "AND", null])
+				.required()
+		})
+	);
+
+	if (validation.error) {
+		throw new Error(validation.error);
+	} else {
+		if (type === null && this.builder.where.length > 0) {
+			throw new Error(
+				"Please specify the type of the between (OR | AND)"
+			);
+		}
+
+		if (mode === FULLTEXT_MODES.BOOLEAN_MODE) {
+			mode = "IN BOOLEAN MODE";
+		} else if (mode === FULLTEXT_MODES.NATURAL_LANGUAGE_MODE) {
+			mode = "IN NATURAL LANGUAGE MODE";
+		} else {
+			throw new Error("Can't find the specified mode");
+		}
+
+		this.builder.where.push({
+			key: key,
+			value: value,
+			mode: mode,
+			operator: "MATCH",
+			type: type
+		});
+	}
+
 	return this;
 };
 
 /**
- * ...
+ * Adds a fulltext where statement to the SQL query
+ *
+ * @param  {string} 			key      		The key you want to check, example: 'title,body'
+ * @param  {string} 			value    		The keywords to search for
+ * @param  {FULLTEXT_MODES} 	mode		    The fulltext mode (NATURAL LANGUAGE or BOOLEAN)
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.orFulltext = function() {
-	console.warn("This function isn't implemented yet!");
-	return this;
+QueryBuilder.prototype.orWhereFulltext = function(key, value, mode) {
+	return this.whereFulltext(key, value, mode, "OR");
 };
 
 /**
- * ...
+ * Adds a fulltext where statement to the SQL query
+ *
+ * @param  {string} 			key      		The key you want to check, example: 'title,body'
+ * @param  {string} 			value    		The keywords to search for
+ * @param  {FULLTEXT_MODES} 	mode		    The fulltext mode (NATURAL LANGUAGE or BOOLEAN)
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.andFulltext = function() {
-	console.warn("This function isn't implemented yet!");
-	return this;
+QueryBuilder.prototype.andWhereFulltext = function(key, value, mode) {
+	return this.whereFulltext(key, value, mode, "AND");
 };
 
 /**
@@ -731,7 +791,7 @@ QueryBuilder.prototype.prepare = function() {
 
 	// DEBUG
 	if (this.debug) {
-		this.message("Query [JOINS]", joinClauses, sql);
+		this.message("Query [JOINS]", join);
 	}
 
 	// Create array with all the where clauses seperated
@@ -753,9 +813,26 @@ QueryBuilder.prototype.prepare = function() {
 		where += "(";
 
 		let tmp = clauses.map((clause, i) => {
-			return (
-				"`" + clause.key + "` " + clause.operator + " " + clause.value
-			);
+			if (clause.operator === "MATCH") {
+				return (
+					"MATCH (" +
+					clause.key +
+					") AGAINST '" +
+					clause.value +
+					"' " +
+					clause.mode +
+					""
+				);
+			} else {
+				return (
+					"`" +
+					clause.key +
+					"` " +
+					clause.operator +
+					" " +
+					clause.value
+				);
+			}
 		});
 		where += tmp.join(" AND ");
 
@@ -884,5 +961,6 @@ QueryBuilder.prototype.error = function(err) {
 // Export
 module.exports = {
 	QueryBuilder: QueryBuilder,
-	DatabaseConnection: dbConnection
+	DatabaseConnection: dbConnection,
+	FULLTEXT_MODES: FULLTEXT_MODES
 };
