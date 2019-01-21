@@ -36,9 +36,10 @@ try {
 
 	if (
 		test_1.query.trim() !==
-		"SELECT `id`,`username`,`email` FROM `tablename`  WHERE (`id` = 1 AND `email` = someone@example.com) OR (`id` = 2) OR (`id` = 3 AND `username` = test)"
+		"SELECT `id`,`username`,`email` FROM `tablename`  WHERE (`id` = 1 AND `email` = 'someone@example.com') OR (`id` = 2) OR (`id` = 3 AND `username` = 'test')"
 	) {
 		failed("#1");
+		console.log(test_1.query.trim());
 	} else {
 		passed("#1");
 	}
@@ -55,7 +56,7 @@ try {
 
 	if (
 		test_2.query.trim() !==
-		"SELECT COUNT(`id`) as count FROM `tablename`  WHERE (`type` = something)"
+		"SELECT COUNT(`id`) as count FROM `tablename`  WHERE (`type` = 'something')"
 	) {
 		failed("#2");
 	} else {
@@ -99,7 +100,7 @@ try {
 		.prepare();
 	if (
 		test_4.query.trim() !==
-		"SELECT `id`,`name` FROM `tablename` LEFT JOIN `tablename2` ON ` tablename2.id` = `tablename.id` RIGHT JOIN `tablename3` ON ` tablename3.id` = `tablename.id` INNER JOIN `tablename4` ON ` tablename4.id` = `tablename.id` WHERE (`id` = 1)  LIMIT 0, 20"
+		"SELECT `id`,`name` FROM `tablename` LEFT JOIN `tablename2` ON `tablename2.id` = `tablename.id` RIGHT JOIN `tablename3` ON `tablename3.id` = `tablename.id` INNER JOIN `tablename4` ON `tablename4.id` = `tablename.id` WHERE (`id` = 1)  LIMIT 0, 20"
 	) {
 		failed("#4");
 	} else {
@@ -121,7 +122,7 @@ try {
 		.limit(0, 20)
 		.prepare();
 	if (
-		test_5.query.trim() ===
+		test_5.query.trim() !==
 		"SELECT `id`,`name` FROM `tablename`  WHERE (MATCH (summary,description) AGAINST 'Keywords here ...' IN NATURAL LANGUAGE MODE)  LIMIT 0, 20"
 	) {
 		failed("#5");

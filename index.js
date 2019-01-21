@@ -774,7 +774,7 @@ QueryBuilder.prototype.prepare = function() {
 			joinClause.pos.toUpperCase() +
 				" JOIN `" +
 				joinClause.table +
-				"` ON ` " +
+				"` ON `" +
 				joinClause.table +
 				"." +
 				joinClause.key +
