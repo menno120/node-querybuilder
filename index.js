@@ -553,7 +553,6 @@ QueryBuilder.prototype.join = function(table, key, value, operator, joinType) {
 				.min(1)
 				.required(),
 			key: Joi.any()
-				.valid(this.builder.keys)
 				.required(),
 			value: Joi.any().required(),
 			operator: Joi.any()
@@ -563,6 +562,8 @@ QueryBuilder.prototype.join = function(table, key, value, operator, joinType) {
 				.valid(["left", "right", "inner"])
 				.required()
 		})
+
+		// .valid(this.builder.keys)
 	);
 
 	if (validation.error) {
