@@ -17,6 +17,19 @@ function passed(test) {
 	stats.passed++;
 	console.info(chalk.green(" [PASSED]: " + test)); // ✔
 }
+function highlightDifferences(str1, str2) {
+	var text = chalk.magenta("Differences: ") + "\r\n\r\n" + chalk.white(str1) + "\r\n\r\n";
+
+	str2.split("").forEach(function(val, i) {
+		if (val === str1.charAt(i)) {
+			text += chalk.white(val);
+		} else {
+			text += chalk.bgCyan(val);
+		}
+	});
+
+	return text;
+}
 
 console.log("");
 console.info("Starting tests:");
@@ -34,12 +47,11 @@ try {
 		.andWhere("username", "test")
 		.prepare();
 
-	if (
-		test_1.query.trim() !==
-		"SELECT `id`,`username`,`email` FROM `tablename`  WHERE (`id` = 1 AND `email` = 'someone@example.com') OR (`id` = 2) OR (`id` = 3 AND `username` = 'test')"
-	) {
-		failed("#1");
-		console.log(test_1.query.trim());
+	let test_1_expected =
+		"SELECT `tablename`.`id`,`tablename`.`username`,`tablename`.`email` FROM `tablename`  WHERE (`id` = 1 AND `email` = 'someone@example.com') OR (`id` = 2) OR (`id` = 3 AND `username` = 'test')";
+
+	if (test_1.query.trim() !== test_1_expected) {
+		failed("#1", highlightDifferences(test_1_expected, test_1.query.trim()));
 	} else {
 		passed("#1");
 	}
@@ -54,11 +66,10 @@ try {
 		.where("type", "something")
 		.prepare();
 
-	if (
-		test_2.query.trim() !==
-		"SELECT COUNT(`id`) as count FROM `tablename`  WHERE (`type` = 'something')"
-	) {
-		failed("#2");
+	let test_2_expected = "SELECT COUNT(`id`) as count FROM `tablename`  WHERE (`type` = 'something')";
+
+	if (test_2.query.trim() !== test_2_expected) {
+		failed("#2", highlightDifferences(test_2_expected, test_2.query.trim()));
 	} else {
 		passed("#2");
 	}
@@ -83,7 +94,6 @@ try {
 	) {
 		passed("#3");
 	} else {
-		// console.log(e.toString());
 		failed("#3", e);
 	}
 }
@@ -92,17 +102,17 @@ try {
 try {
 	let test_4 = new QueryBuilder()
 		.select("tablename", ["id", "name"])
-		.leftJoin("tablename2", "id", "id")
-		.rightJoin("tablename3", "id", "id")
-		.innerJoin("tablename4", "id", "id")
+		.leftJoin("tablename2", "id", "tablename.id")
+		.rightJoin("tablename3", "id", "tablename.id")
+		.innerJoin("tablename4", "id", "tablename.id")
 		.where("id", 1)
 		.limit(0, 20)
 		.prepare();
-	if (
-		test_4.query.trim() !==
-		"SELECT `id`,`name` FROM `tablename` LEFT JOIN `tablename2` ON `tablename2.id` = `tablename.id` RIGHT JOIN `tablename3` ON `tablename3.id` = `tablename.id` INNER JOIN `tablename4` ON `tablename4.id` = `tablename.id` WHERE (`id` = 1)  LIMIT 0, 20"
-	) {
-		failed("#4");
+
+	let test_4_expected =
+		"SELECT `tablename`.`id`,`tablename`.`name` FROM `tablename` LEFT JOIN `tablename2` ON `tablename2`.`id` = `tablename`.`id` RIGHT JOIN `tablename3` ON `tablename3`.`id` = `tablename`.`id` INNER JOIN `tablename4` ON `tablename4`.`id` = `tablename`.`id` WHERE (`id` = 1)  LIMIT 0, 20";
+	if (test_4.query.trim() !== test_4_expected) {
+		failed("#4", highlightDifferences(test_4_expected, test_4.query.trim()));
 	} else {
 		passed("#4");
 	}
@@ -114,18 +124,14 @@ try {
 try {
 	let test_5 = new QueryBuilder()
 		.select("tablename", ["id", "name"])
-		.whereFulltext(
-			"summary,description",
-			"Keywords here ...",
-			FULLTEXT_MODES.NATURAL_LANGUAGE_MODE
-		)
+		.whereFulltext("summary,description", "Keywords here ...", FULLTEXT_MODES.NATURAL_LANGUAGE_MODE)
 		.limit(0, 20)
 		.prepare();
-	if (
-		test_5.query.trim() !==
-		"SELECT `id`,`name` FROM `tablename`  WHERE (MATCH (summary,description) AGAINST 'Keywords here ...' IN NATURAL LANGUAGE MODE)  LIMIT 0, 20"
-	) {
-		failed("#5");
+
+	let test_5_expected =
+		"SELECT `tablename`.`id`,`tablename`.`name` FROM `tablename`  WHERE (MATCH (summary,description) AGAINST 'Keywords here ...' IN NATURAL LANGUAGE MODE)  LIMIT 0, 20";
+	if (test_5.query.trim() !== test_5_expected) {
+		failed("#5", highlightDifferences(test_5_expected, test_5.query.trim()));
 	} else {
 		passed("#5");
 	}
@@ -135,12 +141,7 @@ try {
 
 console.log("");
 console.info(
-	"Total tests: " +
-		(stats.failed + stats.passed) +
-		", Passed: " +
-		stats.passed +
-		", Failed: " +
-		stats.failed
+	"Total tests: " + (stats.failed + stats.passed) + ", Passed: " + stats.passed + ", Failed: " + stats.failed
 );
 console.log("");
 

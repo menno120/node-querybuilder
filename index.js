@@ -33,12 +33,7 @@ DatabaseConnection.prototype.get = function() {
  * @param {string} password 	MySQL server password
  * @param {string} database 	MySQL server database
  */
-DatabaseConnection.prototype.connect = function(
-	host,
-	user,
-	password,
-	database
-) {
+DatabaseConnection.prototype.connect = function(host, user, password, database) {
 	if (host === null) {
 		throw new Error("Host cannot be NULL");
 	}
@@ -135,7 +130,13 @@ QueryBuilder.prototype.select = function(table, keys, names) {
 		return _this;
 	} else {
 		this.builder.table = table;
-		this.builder.keys = keys;
+		this.builder.keys = keys.map(key => {
+			if (!key.includes(".")) {
+				return table + "." + key;
+			} else {
+				return key;
+			}
+		});
 		this.builder.type = "select";
 
 		return this;
@@ -306,12 +307,7 @@ QueryBuilder.prototype.truncate = function(table) {
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.where = function(
-	key,
-	value,
-	operator = "=",
-	type = null
-) {
+QueryBuilder.prototype.where = function(key, value, operator = "=", type = null) {
 	const validation = Joi.validate(
 		{ key, value, operator, type },
 		Joi.object().keys({
@@ -413,9 +409,7 @@ QueryBuilder.prototype.whereBetween = function(key, min, max, type = null) {
 		throw new Error(validation.error);
 	} else {
 		if (type === null && this.builder.where.length > 0) {
-			throw new Error(
-				"Please specify the type of the between (OR | AND)"
-			);
+			throw new Error("Please specify the type of the between (OR | AND)");
 		}
 
 		this.builder.where.push({
@@ -468,10 +462,7 @@ QueryBuilder.prototype.whereFulltext = function(key, value, mode, type = null) {
 			key: Joi.string().required(),
 			value: Joi.string().required(),
 			mode: Joi.any()
-				.valid([
-					FULLTEXT_MODES.NATURAL_LANGUAGE_MODE,
-					FULLTEXT_MODES.BOOLEAN_MODE
-				])
+				.valid([FULLTEXT_MODES.NATURAL_LANGUAGE_MODE, FULLTEXT_MODES.BOOLEAN_MODE])
 				.required(),
 			type: Joi.any()
 				.valid(["OR", "AND", null])
@@ -483,9 +474,7 @@ QueryBuilder.prototype.whereFulltext = function(key, value, mode, type = null) {
 		throw new Error(validation.error);
 	} else {
 		if (type === null && this.builder.where.length > 0) {
-			throw new Error(
-				"Please specify the type of the between (OR | AND)"
-			);
+			throw new Error("Please specify the type of the between (OR | AND)");
 		}
 
 		if (mode === FULLTEXT_MODES.BOOLEAN_MODE) {
@@ -552,8 +541,7 @@ QueryBuilder.prototype.join = function(table, key, value, operator, joinType) {
 			table: Joi.string()
 				.min(1)
 				.required(),
-			key: Joi.any()
-				.required(),
+			key: Joi.any().required(),
 			value: Joi.any().required(),
 			operator: Joi.any()
 				.valid(operators.comparison)
@@ -625,7 +613,12 @@ QueryBuilder.prototype.innerJoin = function(table, key, value, operator = "=") {
 };
 
 /**
- * ...
+ * Orders the results by the given key
+ *
+ * @todo: allow multiple keys
+ *
+ * @param  {string} key 					- The key to order by
+ * @param  {string} [sortOrder = 'ASC'] 	- The order to sort in 'ASC' or 'DESC'
  *
  * @return {object} - Current instance of the QueryBuilder
  */
@@ -662,10 +655,10 @@ QueryBuilder.prototype.orderByCase = function() {
 };
 
 /**
- * ...
+ * Limits the amount of data the database should return
  *
- * @param {int} start - ...
- * @param {int} amount - ...
+ * @param {int} offset - Start returning from this point
+ * @param {int} amount - The amount of items that should be returned
  *
  * @return {object} - Current instance of the QueryBuilder
  */
@@ -717,46 +710,48 @@ QueryBuilder.prototype.prepare = function() {
 	switch (this.builder.type) {
 		case "select":
 			sql =
-				"SELECT `" +
-				this.builder.keys.join("`,`") +
-				"` FROM `" +
-				this.builder.table +
-				"`";
+				"SELECT " +
+				this.builder.keys
+					.map(key => {
+						return this.escape(key);
+					})
+					.join(",") +
+				" FROM " +
+				this.escape(this.builder.table);
 			break;
 		case "insert":
 			sql =
-				"INSERT INTO `" +
-				this.builder.table +
-				"` (`" +
-				this.builder.keys.join("`,`") +
-				"`) VALUES (" +
+				"INSERT INTO " +
+				this.escape(this.builder.table) +
+				" (" +
+				this.builder.keys
+					.map(key => {
+						return this.escape(key);
+					})
+					.join(",") +
+				") VALUES (" +
 				prepValues(this.builder.values) +
 				")";
 
 			break;
 		case "update":
-			sql =
-				"UPDATE `" +
-				this.builder.table +
-				"` SET" +
-				this.builder.keys.join(",");
+			sql = "UPDATE " + this.escape(this.builder.table) + " SET" + this.builder.keys.join(",");
 
 			break;
 		case "delete":
-			sql = "DELETE FROM `" + this.builder.table + "`";
+			sql = "DELETE FROM " + this.escape(this.builder.table);
 
 			break;
 		case "count":
 			sql =
-				"SELECT COUNT(`" +
-				this.builder.keys.join("`,`") +
-				"`) as count FROM `" +
-				this.builder.table +
-				"`";
+				"SELECT COUNT(" +
+				this.escape(this.builder.keys[0]) +
+				") as count FROM " +
+				this.escape(this.builder.table);
 
 			break;
 		case "truncate":
-			sql = "TRUNCATE `" + this.builder.table + "`";
+			sql = "TRUNCATE " + this.escape(this.builder.table);
 			break;
 		default:
 			throw new Error("Unknown action!");
@@ -772,19 +767,19 @@ QueryBuilder.prototype.prepare = function() {
 	this.builder.joins.forEach((joinClause, x) => {
 		joinClauses.push(
 			joinClause.pos.toUpperCase() +
-				" JOIN `" +
-				joinClause.table +
-				"` ON `" +
-				joinClause.table +
-				"." +
-				joinClause.key +
-				"` " +
+				" JOIN " +
+				this.escape(joinClause.table) +
+				" ON " +
+				(joinClause.key.includes(".")
+					? this.escape(joinClause.key)
+					: this.escape(joinClause.table + "." + joinClause.key)) +
+				" " +
 				joinClause.operator +
-				" `" +
+				" " +
 				(joinClause.value.includes(".")
-					? joinClause.value
-					: this.builder.table + "." + joinClause.value) +
-				"`"
+					? this.escape(joinClause.value)
+					: this.escape(this.builder.table + "." + joinClause.value)) +
+				""
 		);
 	});
 
@@ -815,23 +810,14 @@ QueryBuilder.prototype.prepare = function() {
 
 		let tmp = clauses.map((clause, i) => {
 			if (clause.operator === "MATCH") {
-				return (
-					"MATCH (" +
-					clause.key +
-					") AGAINST '" +
-					clause.value +
-					"' " +
-					clause.mode +
-					""
-				);
+				return "MATCH (" + clause.key + ") AGAINST '" + clause.value + "' " + clause.mode + "";
 			} else {
 				return (
-					"`" +
-					clause.key +
-					"` " +
+					this.escape(clause.key) +
+					" " +
 					clause.operator +
-					" " + (typeof clause.value === "string" ? ("'" + clause.value + "'") : clause.value)
-					
+					" " +
+					(typeof clause.value === "string" ? "'" + clause.value + "'" : clause.value)
 				);
 			}
 		});
@@ -854,7 +840,7 @@ QueryBuilder.prototype.prepare = function() {
 		order += "ORDER BY";
 		let tmp = this.builder.order.map(order => {
 			if (order.type === "simple") {
-				return "`" + order.key + "` " + order.sortOrder;
+				return this.escape(order.key) + order.sortOrder;
 			} else {
 				// @todo: impelemnt
 				console.warn("Not implemented yet!");
@@ -873,10 +859,7 @@ QueryBuilder.prototype.prepare = function() {
 		limit = "LIMIT " + this.builder.limit.offset;
 	}
 	if (this.builder.limit.amount !== null) {
-		if (
-			this.builder.limit.offset === null &&
-			this.builder.limit.amount !== null
-		) {
+		if (this.builder.limit.offset === null && this.builder.limit.amount !== null) {
 			throw new Error("You can't set an amount without an offset");
 		}
 		limit += ", " + this.builder.limit.amount;
@@ -940,12 +923,33 @@ QueryBuilder.prototype.execute = function(callback) {
 	});
 };
 
+/**
+ * Escaped the given key with a: (`)
+ *
+ * @private
+ *
+ * @param  {string} key - Key to escape
+ *
+ * @return {string}       Escaped key
+ */
+QueryBuilder.prototype.escape = function(key) {
+	key = key.toString();
+
+	if (key.includes(".") && !key.includes("`.`")) {
+		let tmp = key.split(".");
+		return "`" + tmp[0] + "`.`" + tmp[1] + "`";
+	}
+
+	return "`" + key + "`";
+};
+
+/**
+ * Show message
+ *
+ * @private
+ */
 QueryBuilder.prototype.message = function() {
-	console.group(
-		"----------- " +
-			chalk.yellowBright.bold("[QueryBuilder]") +
-			" -----------"
-	);
+	console.group("----------- " + chalk.yellowBright.bold("[QueryBuilder]") + " -----------");
 	for (let i = 0; i < arguments.length; i++) {
 		console.warn(arguments[i]);
 	}
@@ -953,6 +957,13 @@ QueryBuilder.prototype.message = function() {
 	console.log();
 };
 
+/**
+ * Show error message
+ *
+ * @private
+ *
+ * @param  {string} err - The error message to show
+ */
 QueryBuilder.prototype.error = function(err) {
 	console.log(chalk.bgRed.bold.white("ERROR:"));
 	console.error(err);
