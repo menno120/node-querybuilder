@@ -193,7 +193,7 @@ QueryBuilder.prototype.insert = function(table, values) {
 	const validation = Joi.validate(
 		{ values, table },
 		Joi.object().keys({
-			values: Joi.object({}).unknown(),
+			values: Joi.object(),
 			table: Joi.string()
 				.min(1)
 				.required()
@@ -215,21 +215,16 @@ QueryBuilder.prototype.insert = function(table, values) {
 /**
  * Update a row in the database
  *
- * @param  {string} 	table 		- Name of the table you want to select something from
- * @param  {string[]}  	keys  		- The items you want tot select
- * @param  {string[]} 	names 		- Key name of the value
+ * @param  {string} 					table 	- Name of the table you want to select something from
+ * @param  {object<string,string>}  	values  - The items you want tot insert (key => value object)
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.update = function(keys, table) {
+QueryBuilder.prototype.update = function(table, values) {
 	const validation = Joi.validate(
-		{ keys, table },
+		{ values, table },
 		Joi.object().keys({
-			keys: Joi.array().items(
-				Joi.string()
-					.min(1)
-					.required()
-			),
+			values: Joi.object().required(),
 			table: Joi.string()
 				.min(1)
 				.required()
@@ -240,7 +235,8 @@ QueryBuilder.prototype.update = function(keys, table) {
 		throw new Error(validation.error);
 	} else {
 		this.builder.table = table;
-		this.builder.keys = keys;
+		this.builder.keys = Object.keys(values);
+		this.builder.values = Object.values(values);
 		this.builder.type = "update";
 
 		return this;
@@ -256,7 +252,7 @@ QueryBuilder.prototype.update = function(keys, table) {
  */
 QueryBuilder.prototype.delete = function(table) {
 	const validation = Joi.validate(
-		{ keys, table },
+		{ table },
 		Joi.object().keys({
 			table: Joi.string()
 				.min(1)
@@ -283,7 +279,7 @@ QueryBuilder.prototype.delete = function(table) {
  */
 QueryBuilder.prototype.truncate = function(table) {
 	const validation = Joi.validate(
-		{ keys, table },
+		{ table },
 		Joi.object().keys({
 			table: Joi.string()
 				.min(1)
@@ -752,11 +748,19 @@ QueryBuilder.prototype.prepare = function() {
 
 			break;
 		case "update":
-			sql =
-				"UPDATE " +
-				this.escape(this.builder.table) +
-				" SET" +
-				this.builder.keys.join(",");
+			let tmp_values = [];
+
+			sql = "UPDATE " + this.escape(this.builder.table) + " SET ";
+
+			for (let i = 0; i < this.builder.keys.length; i++) {
+				tmp_values.push(
+					this.escape(this.builder.keys[i]) +
+						"=" +
+						this.builder.values[i] // @TOOD: escape
+				);
+			}
+
+			sql += tmp_values.join(", ");
 
 			break;
 		case "delete":
