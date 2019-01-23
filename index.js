@@ -33,7 +33,12 @@ DatabaseConnection.prototype.get = function() {
  * @param {string} password 	MySQL server password
  * @param {string} database 	MySQL server database
  */
-DatabaseConnection.prototype.connect = function(host, user, password, database) {
+DatabaseConnection.prototype.connect = function(
+	host,
+	user,
+	password,
+	database
+) {
 	if (host === null) {
 		throw new Error("Host cannot be NULL");
 	}
@@ -298,7 +303,7 @@ QueryBuilder.prototype.truncate = function(table) {
 
 /**
  * Adds a where clause to the SQL statement
- * Note: for between and fulltext where clauses use the between() and fulltext() functions
+ * Note: for between and fulltext where clauses use the whereBetween() and whereFulltext() functions
  *
  * @param  {string} 	key      		The key you want to check
  * @param  {string} 	value    		The value you want to check against
@@ -307,7 +312,12 @@ QueryBuilder.prototype.truncate = function(table) {
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.where = function(key, value, operator = "=", type = null) {
+QueryBuilder.prototype.where = function(
+	key,
+	value,
+	operator = "=",
+	type = null
+) {
 	const validation = Joi.validate(
 		{ key, value, operator, type },
 		Joi.object().keys({
@@ -409,7 +419,9 @@ QueryBuilder.prototype.whereBetween = function(key, min, max, type = null) {
 		throw new Error(validation.error);
 	} else {
 		if (type === null && this.builder.where.length > 0) {
-			throw new Error("Please specify the type of the between (OR | AND)");
+			throw new Error(
+				"Please specify the type of the between (OR | AND)"
+			);
 		}
 
 		this.builder.where.push({
@@ -462,7 +474,10 @@ QueryBuilder.prototype.whereFulltext = function(key, value, mode, type = null) {
 			key: Joi.string().required(),
 			value: Joi.string().required(),
 			mode: Joi.any()
-				.valid([FULLTEXT_MODES.NATURAL_LANGUAGE_MODE, FULLTEXT_MODES.BOOLEAN_MODE])
+				.valid([
+					FULLTEXT_MODES.NATURAL_LANGUAGE_MODE,
+					FULLTEXT_MODES.BOOLEAN_MODE
+				])
 				.required(),
 			type: Joi.any()
 				.valid(["OR", "AND", null])
@@ -474,7 +489,9 @@ QueryBuilder.prototype.whereFulltext = function(key, value, mode, type = null) {
 		throw new Error(validation.error);
 	} else {
 		if (type === null && this.builder.where.length > 0) {
-			throw new Error("Please specify the type of the between (OR | AND)");
+			throw new Error(
+				"Please specify the type of the between (OR | AND)"
+			);
 		}
 
 		if (mode === FULLTEXT_MODES.BOOLEAN_MODE) {
@@ -735,7 +752,11 @@ QueryBuilder.prototype.prepare = function() {
 
 			break;
 		case "update":
-			sql = "UPDATE " + this.escape(this.builder.table) + " SET" + this.builder.keys.join(",");
+			sql =
+				"UPDATE " +
+				this.escape(this.builder.table) +
+				" SET" +
+				this.builder.keys.join(",");
 
 			break;
 		case "delete":
@@ -778,7 +799,9 @@ QueryBuilder.prototype.prepare = function() {
 				" " +
 				(joinClause.value.includes(".")
 					? this.escape(joinClause.value)
-					: this.escape(this.builder.table + "." + joinClause.value)) +
+					: this.escape(
+							this.builder.table + "." + joinClause.value
+					  )) +
 				""
 		);
 	});
@@ -810,14 +833,24 @@ QueryBuilder.prototype.prepare = function() {
 
 		let tmp = clauses.map((clause, i) => {
 			if (clause.operator === "MATCH") {
-				return "MATCH (" + clause.key + ") AGAINST '" + clause.value + "' " + clause.mode + "";
+				return (
+					"MATCH (" +
+					clause.key +
+					") AGAINST '" +
+					clause.value +
+					"' " +
+					clause.mode +
+					""
+				);
 			} else {
 				return (
 					this.escape(clause.key) +
 					" " +
 					clause.operator +
 					" " +
-					(typeof clause.value === "string" ? "'" + clause.value + "'" : clause.value)
+					(typeof clause.value === "string"
+						? "'" + clause.value + "'"
+						: clause.value)
 				);
 			}
 		});
@@ -859,7 +892,10 @@ QueryBuilder.prototype.prepare = function() {
 		limit = "LIMIT " + this.builder.limit.offset;
 	}
 	if (this.builder.limit.amount !== null) {
-		if (this.builder.limit.offset === null && this.builder.limit.amount !== null) {
+		if (
+			this.builder.limit.offset === null &&
+			this.builder.limit.amount !== null
+		) {
 			throw new Error("You can't set an amount without an offset");
 		}
 		limit += ", " + this.builder.limit.amount;
@@ -905,9 +941,7 @@ QueryBuilder.prototype.prepare = function() {
  * Executes the query
  * Note: request the database connection to be setup via the DatabaseConnection.connect() function
  *
- * @param {ExecuteCallback} callback -
- *
- * @return {boolean} - Current instance of the QueryBuilder
+ * @param {ExecuteCallback} callback - Callback function
  */
 QueryBuilder.prototype.execute = function(callback) {
 	if (this.debug) {
@@ -915,6 +949,27 @@ QueryBuilder.prototype.execute = function(callback) {
 	}
 
 	dbConnection.get().query(this.query, (error, result) => {
+		if (typeof callback === "function") {
+			callback(error, result);
+		} else {
+			console.warn("No valid callback was provided ?!");
+		}
+	});
+};
+
+/**
+ * Executes the query
+ * Note: request the database connection to be setup via the DatabaseConnection.connect() function
+ *
+ * @param {string}			sql 		- SQL Query
+ * @param {ExecuteCallback} callback 	- Callback function
+ */
+QueryBuilder.prototype.raw = function(sql, callback) {
+	if (this.debug) {
+		console.log(sql);
+	}
+
+	dbConnection.get().query(sql, (error, result) => {
 		if (typeof callback === "function") {
 			callback(error, result);
 		} else {
@@ -949,7 +1004,11 @@ QueryBuilder.prototype.escape = function(key) {
  * @private
  */
 QueryBuilder.prototype.message = function() {
-	console.group("----------- " + chalk.yellowBright.bold("[QueryBuilder]") + " -----------");
+	console.group(
+		"----------- " +
+			chalk.yellowBright.bold("[QueryBuilder]") +
+			" -----------"
+	);
 	for (let i = 0; i < arguments.length; i++) {
 		console.warn(arguments[i]);
 	}

@@ -10,7 +10,7 @@ Simple to use QueryBuilder
 
 ## Examples:
 
-**select statement**
+**SELECT Statement**
 
 ```js
 new QueryBuilder()
@@ -32,7 +32,7 @@ new QueryBuilder()
 	});
 ```
 
-**count statement**
+**COUNT Statement**
 
 ```js
 new QueryBuilder()
