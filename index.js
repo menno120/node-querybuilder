@@ -836,7 +836,7 @@ QueryBuilder.prototype.prepare = function() {
 	}
 
 	// Create order
-	if (this.builder.order.length > 1) {
+	if (this.builder.order.length > 0) {
 		order += "ORDER BY";
 		let tmp = this.builder.order.map(order => {
 			if (order.type === "simple") {
