@@ -100,13 +100,13 @@ var QueryBuilder = function(debug = false) {
 /**
  * Fetch a row from the database
  *
- * @param  {string} 	table 		Name of the table you want to select something from
- * @param  {string[]}  	keys  		The items you want tot select
- * @param  {string[]} 	names 		Key name of the value
+ * @param  {string} 	table 			Name of the table you want to select something from
+ * @param  {string[]}  	[keys=[]]  		The items you want tot select
+ * @param  {string[]} 	[names=[]] 		Key name of the value
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.select = function(table, keys, names) {
+QueryBuilder.prototype.select = function(table, keys = [], names = []) {
 	const validation = Joi.validate(
 		{ keys, table, names },
 		Joi.object().keys({
@@ -116,8 +116,8 @@ QueryBuilder.prototype.select = function(table, keys, names) {
 			keys: Joi.array().items(
 				Joi.string()
 					.min(1)
-					.required()
-			),
+					.optional()
+			).optional(),
 			names: Joi.array()
 				.items(Joi.string().min(1))
 				.when("keys", {
@@ -134,15 +134,21 @@ QueryBuilder.prototype.select = function(table, keys, names) {
 		console.log(_this);
 		return _this;
 	} else {
-		this.builder.table = table;
-		this.builder.keys = keys.map(key => {
+		let tmp_keys = keys.map(key => {
 			if (!key.includes(".")) {
 				return table + "." + key;
 			} else {
 				return key;
 			}
 		});
+
+		this.builder.table = table;
 		this.builder.type = "select";
+		
+		// @TOOD: add names to keys
+		for(let i = 0; i < tmp_keys.length; i++) {
+			this.builder.keys.push({ key: tmp_keys[i], as: null, type: "simple" });
+		}
 
 		return this;
 	}
@@ -151,12 +157,13 @@ QueryBuilder.prototype.select = function(table, keys, names) {
 /**
  * Fetch a row from the database
  *
- * @param  {string} 	table 		Name of the table you want to select something from
- * @param  {string}  	keys  		The key you want to count
+ * @param  {string} 	table 				Name of the table you want to select something from
+ * @param  {string}  	keys  				The key you want to count
+ * @param  {string} 	[keyName="count"] 	The name of the count result
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.count = function(table, key) {
+QueryBuilder.prototype.count = function(table, key, keyName = "count") {
 	const validation = Joi.validate(
 		{ key, table },
 		Joi.object().keys({
@@ -174,8 +181,8 @@ QueryBuilder.prototype.count = function(table, key) {
 		return this;
 	} else {
 		this.builder.table = table;
-		this.builder.keys = [key];
-		this.builder.type = "count";
+		this.builder.keys.push({ key: key, as: keyName, type: "count" });
+		this.builder.type = "select";
 
 		return this;
 	}
@@ -295,6 +302,58 @@ QueryBuilder.prototype.truncate = function(table) {
 
 		return this;
 	}
+};
+
+/**
+ * Adds a fulltext statement to the SQL query
+ *
+ * @param  {string} 			index      			The fulltext index you want to check, example: 'title,body'
+ * @param  {string} 			value    			The keywords to search for
+ * @param  {FULLTEXT_MODES} 	mode		    	The fulltext mode (NATURAL LANGUAGE or BOOLEAN)
+ * @param  {string}				[keyName=score]		Name of the key
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.fulltext = function(index, value, mode, keyName = 'score') {
+	const validation = Joi.validate(
+		{ index, value, mode, keyName },
+		Joi.object().keys({
+			index: Joi.string().required(),
+			value: Joi.string().required(),
+			mode: Joi.any()
+				.valid([FULLTEXT_MODES.NATURAL_LANGUAGE_MODE, FULLTEXT_MODES.BOOLEAN_MODE])
+				.required(),
+			keyName: Joi.string().required()
+		})
+	);
+
+	if (validation.error) {
+		throw new Error(validation.error);
+	} else {
+		if(this.builder.type !== "select") {
+			throw new Error('Fulltext select is only availible for select queries currently!');
+		}
+
+		if (mode === FULLTEXT_MODES.BOOLEAN_MODE) {
+			mode = "IN BOOLEAN MODE";
+		} else if (mode === FULLTEXT_MODES.NATURAL_LANGUAGE_MODE) {
+			mode = "IN NATURAL LANGUAGE MODE";
+		} else {
+			throw new Error("Can't find the specified mode");
+		}
+
+		this.builder.keys.push({
+			key: index,
+			as: keyName,
+			value: value,
+			mode: mode,
+			operator: "MATCH",
+			type: 'fulltext'
+		});
+		this.builder.type = "select";
+	}
+
+	return this;
 };
 
 /**
@@ -726,7 +785,15 @@ QueryBuilder.prototype.prepare = function() {
 				"SELECT " +
 				this.builder.keys
 					.map(key => {
-						return this.escape(key);
+						if(typeof key.type === "undefined" || key.type === "simple") {
+							return this.escape(key.key);
+						} else if(key.type === "count") {
+							return "COUNT(" + this.escape(key.key) + ") AS " + key.as;
+						} else if(key.type === "fulltext") {
+							return "MATCH (" + key.key + ") AGAINST '" + key.value + "' " + key.mode + " AS " + key.as;
+						} else { 
+							throw new Error('Unknown select type!');
+						}
 					})
 					.join(",") +
 				" FROM " +
@@ -765,14 +832,6 @@ QueryBuilder.prototype.prepare = function() {
 			break;
 		case "delete":
 			sql = "DELETE FROM " + this.escape(this.builder.table);
-
-			break;
-		case "count":
-			sql =
-				"SELECT COUNT(" +
-				this.escape(this.builder.keys[0]) +
-				") as count FROM " +
-				this.escape(this.builder.table);
 
 			break;
 		case "truncate":
@@ -873,14 +932,14 @@ QueryBuilder.prototype.prepare = function() {
 	}
 
 	// Create order
-	if (this.builder.order.length > 1) {
+	if (this.builder.order.length > 0) {
 		order += "ORDER BY";
 		let tmp = this.builder.order.map(order => {
 			if (order.type === "simple") {
-				return this.escape(order.key) + order.sortOrder;
+				return " " + this.escape(order.key) + " " + order.sortOrder;
 			} else {
-				// @todo: impelemnt
-				console.warn("Not implemented yet!");
+				// @todo: implement order by case
+				throw new Error("Not implemented yet!");
 			}
 		});
 		order += tmp.join(",");
@@ -992,14 +1051,19 @@ QueryBuilder.prototype.raw = function(sql, callback) {
  * @return {string}       Escaped key
  */
 QueryBuilder.prototype.escape = function(key) {
-	key = key.toString();
+	try {
+		key = key.toString();
 
-	if (key.includes(".") && !key.includes("`.`")) {
-		let tmp = key.split(".");
-		return "`" + tmp[0] + "`.`" + tmp[1] + "`";
+		if (key.includes(".") && !key.includes("`.`")) {
+			let tmp = key.split(".");
+			return "`" + tmp[0] + "`.`" + tmp[1] + "`";
+		}
+
+		return "`" + key + "`";
+	} catch(e) { 
+		console.log(key); 
+		throw new Error(e) 
 	}
-
-	return "`" + key + "`";
 };
 
 /**

@@ -45,14 +45,14 @@ try {
 		.select("tablename", ["id", "username", "email"])
 		.where("id", 1)
 		.andWhere("email", "someone@example.com")
-		.orderBy("ID", "ASC")
+		.orderBy("id", "ASC")
 		.orWhere("id", 2)
 		.orWhere("id", 3)
 		.andWhere("username", "test")
 		.prepare();
 
 	let test_1_expected =
-		"SELECT `tablename`.`id`,`tablename`.`username`,`tablename`.`email` FROM `tablename`  WHERE (`id` = 1 AND `email` = 'someone@example.com') OR (`id` = 2) OR (`id` = 3 AND `username` = 'test')";
+		"SELECT `tablename`.`id`,`tablename`.`username`,`tablename`.`email` FROM `tablename`  WHERE (`id` = 1 AND `email` = 'someone@example.com') OR (`id` = 2) OR (`id` = 3 AND `username` = 'test') ORDER BY `id` ASC";
 
 	if (test_1.query.trim() !== test_1_expected) {
 		failed(
@@ -74,7 +74,7 @@ try {
 		.prepare();
 
 	let test_2_expected =
-		"SELECT COUNT(`id`) as count FROM `tablename`  WHERE (`type` = 'something')";
+		"SELECT COUNT(`id`) AS count FROM `tablename`  WHERE (`type` = 'something')";
 
 	if (test_2.query.trim() !== test_2_expected) {
 		failed(
@@ -178,7 +178,7 @@ try {
 		passed("#6");
 	}
 } catch (e) {
-	failed("#5", e);
+	failed("#6", e);
 }
 
 // Test #7
@@ -199,10 +199,8 @@ try {
 	} else {
 		passed("#7");
 	}
-
-	console.log(test_7);
 } catch (e) {
-	failed("#5", e);
+	failed("#7", e);
 }
 
 // Test #8
@@ -222,10 +220,8 @@ try {
 	} else {
 		passed("#8");
 	}
-
-	console.log(test_8);
 } catch (e) {
-	failed("#5", e);
+	failed("#8", e);
 }
 
 // Test #9
@@ -242,10 +238,30 @@ try {
 	} else {
 		passed("#9");
 	}
-
-	console.log(test_9);
 } catch (e) {
-	failed("#5", e);
+	failed("#9", e);
+}
+
+// Test #10
+try {
+	let test_10 = new QueryBuilder()
+		.select("tablename", [])
+		.fulltext("title,description", 'text', FULLTEXT_MODES.BOOLEAN_MODE)
+		.orderBy('score', 'ASC')
+		.prepare()
+
+	let test_10_expected = "SELECT MATCH (title,description) AGAINST 'text' IN BOOLEAN MODE AS score FROM `tablename`   ORDER BY `score` ASC";
+
+	if (test_10.query.trim() !== test_10_expected) {
+		failed(
+			"#10",
+			highlightDifferences(test_10_expected, test_10.query.trim())
+		);
+	} else {
+		passed("#10");
+	}
+} catch (e) {
+	failed("#10", e);
 }
 
 console.log("");
