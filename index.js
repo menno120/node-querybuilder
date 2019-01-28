@@ -95,24 +95,26 @@ var QueryBuilder = function(debug = false) {
 /**
  * Fetch a row from the database
  *
- * @param  {string} 	table 		Name of the table you want to select something from
- * @param  {string[]}  	keys  		The items you want tot select
- * @param  {string[]} 	names 		Key name of the value
+ * @param  {string} 	table 			Name of the table you want to select something from
+ * @param  {string[]}  	[keys=[]]  		The items you want tot select
+ * @param  {string[]} 	[names=[]] 		Key name of the value
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.select = function(table, keys, names) {
+QueryBuilder.prototype.select = function(table, keys = [], names = []) {
 	const validation = Joi.validate(
 		{ keys, table, names },
 		Joi.object().keys({
 			table: Joi.string()
 				.min(1)
 				.required(),
-			keys: Joi.array().items(
-				Joi.string()
-					.min(1)
-					.required()
-			),
+			keys: Joi.array()
+				.items(
+					Joi.string()
+						.min(1)
+						.optional()
+				)
+				.optional(),
 			names: Joi.array()
 				.items(Joi.string().min(1))
 				.when("keys", {
@@ -129,37 +131,53 @@ QueryBuilder.prototype.select = function(table, keys, names) {
 		console.log(_this);
 		return _this;
 	} else {
-		this.builder.table = table;
-		this.builder.keys = keys.map(key => {
+		let tmp_keys = keys.map(key => {
 			if (!key.includes(".")) {
 				return table + "." + key;
 			} else {
 				return key;
 			}
 		});
+
+		this.builder.table = table;
 		this.builder.type = "select";
+
+		// @TOOD: add names to keys
+		for (let i = 0; i < tmp_keys.length; i++) {
+			this.builder.keys.push({ key: tmp_keys[i], as: null, type: "simple" });
+		}
 
 		return this;
 	}
 };
 
 /**
- * Fetch a row from the database
+ * Adds
+ *
+ * @private
  *
  * @param  {string} 	table 		Name of the table you want to select something from
- * @param  {string}  	keys  		The key you want to count
+ * @param  {string}  	key  		The key you want to count
+ * @param  {string} 	keyName 	The name of the count result
+ * @param  {string} 	type 		Type of function (count, avg, sum)
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.count = function(table, key) {
+QueryBuilder.prototype.selectFunc = function(table, key, keyName, type) {
 	const validation = Joi.validate(
-		{ key, table },
+		{ table, key, keyName, type },
 		Joi.object().keys({
 			table: Joi.string()
 				.min(1)
 				.required(),
 			key: Joi.string()
 				.min(1)
+				.required(),
+			keyName: Joi.string()
+				.min(1)
+				.required(),
+			type: Joi.string()
+				.valid(["count", "avg", "sum"])
 				.required()
 		})
 	);
@@ -169,11 +187,51 @@ QueryBuilder.prototype.count = function(table, key) {
 		return this;
 	} else {
 		this.builder.table = table;
-		this.builder.keys = [key];
-		this.builder.type = "count";
+		this.builder.keys.push({ key: key, as: keyName, type: type });
+		this.builder.type = "select";
 
 		return this;
 	}
+};
+
+/**
+ * Adds a COUNT() selector to the select statement
+ *
+ * @param  {string} 	table 				Name of the table you want to select something from
+ * @param  {string}  	key  				The key you want to count
+ * @param  {string} 	[keyName="count"] 	The name of the count result
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.count = function(table, key, keyName = "count") {
+	return this.selectFunc(table, key, keyName, "count");
+};
+
+/**
+ * Adds a AVG() selector to the select statement
+ *
+ * @param  {string} 	table 				Name of the table you want to select something from
+ * @param  {string}  	key  				The key you want to count
+ * @param  {string} 	[keyName="avg"] 	The name of the count result
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.avg = function(table, key, keyName = "avg") {
+	return this.selectFunc(table, key, keyName, "avg");
+};
+
+/**
+ * Adds a sum() selector to the select statement
+ * Note: this function is not yet automaticly escaped, and doesn't work with joins currently
+ *
+ * @param  {string} 	table 				Name of the table you want to select something from
+ * @param  {string}  	sum  				The expression to sum
+ * @param  {string} 	[keyName="sum"] 	The name of the count result
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.sum = function(table, sum, keyName = "sum") {
+	return this.selectFunc(table, sum, keyName, "sum");
 };
 
 /**
@@ -188,7 +246,7 @@ QueryBuilder.prototype.insert = function(table, values) {
 	const validation = Joi.validate(
 		{ values, table },
 		Joi.object().keys({
-			values: Joi.object({}).unknown(),
+			values: Joi.object(),
 			table: Joi.string()
 				.min(1)
 				.required()
@@ -210,21 +268,16 @@ QueryBuilder.prototype.insert = function(table, values) {
 /**
  * Update a row in the database
  *
- * @param  {string} 	table 		- Name of the table you want to select something from
- * @param  {string[]}  	keys  		- The items you want tot select
- * @param  {string[]} 	names 		- Key name of the value
+ * @param  {string} 					table 	- Name of the table you want to select something from
+ * @param  {object<string,string>}  	values  - The items you want tot insert (key => value object)
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.update = function(keys, table) {
+QueryBuilder.prototype.update = function(table, values) {
 	const validation = Joi.validate(
-		{ keys, table },
+		{ values, table },
 		Joi.object().keys({
-			keys: Joi.array().items(
-				Joi.string()
-					.min(1)
-					.required()
-			),
+			values: Joi.object().required(),
 			table: Joi.string()
 				.min(1)
 				.required()
@@ -235,7 +288,8 @@ QueryBuilder.prototype.update = function(keys, table) {
 		throw new Error(validation.error);
 	} else {
 		this.builder.table = table;
-		this.builder.keys = keys;
+		this.builder.keys = Object.keys(values);
+		this.builder.values = Object.values(values);
 		this.builder.type = "update";
 
 		return this;
@@ -251,7 +305,7 @@ QueryBuilder.prototype.update = function(keys, table) {
  */
 QueryBuilder.prototype.delete = function(table) {
 	const validation = Joi.validate(
-		{ keys, table },
+		{ table },
 		Joi.object().keys({
 			table: Joi.string()
 				.min(1)
@@ -278,7 +332,7 @@ QueryBuilder.prototype.delete = function(table) {
  */
 QueryBuilder.prototype.truncate = function(table) {
 	const validation = Joi.validate(
-		{ keys, table },
+		{ table },
 		Joi.object().keys({
 			table: Joi.string()
 				.min(1)
@@ -297,8 +351,60 @@ QueryBuilder.prototype.truncate = function(table) {
 };
 
 /**
+ * Adds a fulltext statement to the SQL query
+ *
+ * @param  {string} 			index      			The fulltext index you want to check, example: 'title,body'
+ * @param  {string} 			value    			The keywords to search for
+ * @param  {FULLTEXT_MODES} 	mode		    	The fulltext mode (NATURAL LANGUAGE or BOOLEAN)
+ * @param  {string}				[keyName=score]		Name of the key
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.fulltext = function(index, value, mode, keyName = "score") {
+	const validation = Joi.validate(
+		{ index, value, mode, keyName },
+		Joi.object().keys({
+			index: Joi.string().required(),
+			value: Joi.string().required(),
+			mode: Joi.any()
+				.valid([FULLTEXT_MODES.NATURAL_LANGUAGE_MODE, FULLTEXT_MODES.BOOLEAN_MODE])
+				.required(),
+			keyName: Joi.string().required()
+		})
+	);
+
+	if (validation.error) {
+		throw new Error(validation.error);
+	} else {
+		if (this.builder.type !== "select") {
+			throw new Error("Fulltext select is only availible for select queries currently!");
+		}
+
+		if (mode === FULLTEXT_MODES.BOOLEAN_MODE) {
+			mode = "IN BOOLEAN MODE";
+		} else if (mode === FULLTEXT_MODES.NATURAL_LANGUAGE_MODE) {
+			mode = "IN NATURAL LANGUAGE MODE";
+		} else {
+			throw new Error("Can't find the specified mode");
+		}
+
+		this.builder.keys.push({
+			key: index,
+			as: keyName,
+			value: value,
+			mode: mode,
+			operator: "MATCH",
+			type: "fulltext"
+		});
+		this.builder.type = "select";
+	}
+
+	return this;
+};
+
+/**
  * Adds a where clause to the SQL statement
- * Note: for between and fulltext where clauses use the between() and fulltext() functions
+ * Note: for between and fulltext where clauses use the whereBetween() and whereFulltext() functions
  *
  * @param  {string} 	key      		The key you want to check
  * @param  {string} 	value    		The value you want to check against
@@ -713,7 +819,21 @@ QueryBuilder.prototype.prepare = function() {
 				"SELECT " +
 				this.builder.keys
 					.map(key => {
-						return this.escape(key);
+						if (typeof key.type === "undefined" || key.type === "simple") {
+							return this.escape(key.key);
+						} else if (key.type === "count") {
+							return "COUNT(" + this.escape(this.builder.table + "." + key.key) + ") AS " + key.as;
+						} else if (key.type === "avg") {
+							return "AVG(" + this.escape(this.builder.table + "." + key.key) + ") AS " + key.as;
+						} else if (key.type === "sum") {
+							return "SUM(" + key.key + ") AS " + key.as;
+						} else if (key.type === "fulltext") {
+							return "MATCH (" + key.key + ") AGAINST '" + key.value + "' " + key.mode + " AS " + key.as;
+						} else if (key.type === "subQuery") {
+							return "(" + key.key.prepare().query + ") AS " + key.as;
+						} else {
+							throw new Error("Unknown select type!");
+						}
 					})
 					.join(",") +
 				" FROM " +
@@ -735,19 +855,21 @@ QueryBuilder.prototype.prepare = function() {
 
 			break;
 		case "update":
-			sql = "UPDATE " + this.escape(this.builder.table) + " SET" + this.builder.keys.join(",");
+			let tmp_values = [];
+
+			sql = "UPDATE " + this.escape(this.builder.table) + " SET ";
+
+			for (let i = 0; i < this.builder.keys.length; i++) {
+				tmp_values.push(
+					this.escape(this.builder.keys[i]) + "=" + this.builder.values[i] // @TOOD: escape
+				);
+			}
+
+			sql += tmp_values.join(", ");
 
 			break;
 		case "delete":
 			sql = "DELETE FROM " + this.escape(this.builder.table);
-
-			break;
-		case "count":
-			sql =
-				"SELECT COUNT(" +
-				this.escape(this.builder.keys[0]) +
-				") as count FROM " +
-				this.escape(this.builder.table);
 
 			break;
 		case "truncate":
@@ -840,10 +962,10 @@ QueryBuilder.prototype.prepare = function() {
 		order += "ORDER BY";
 		let tmp = this.builder.order.map(order => {
 			if (order.type === "simple") {
-				return this.escape(order.key) + order.sortOrder;
+				return " " + this.escape(order.key) + " " + order.sortOrder;
 			} else {
-				// @todo: impelemnt
-				console.warn("Not implemented yet!");
+				// @todo: implement order by case
+				throw new Error("Not implemented yet!");
 			}
 		});
 		order += tmp.join(",");
@@ -905,9 +1027,7 @@ QueryBuilder.prototype.prepare = function() {
  * Executes the query
  * Note: request the database connection to be setup via the DatabaseConnection.connect() function
  *
- * @param {ExecuteCallback} callback -
- *
- * @return {boolean} - Current instance of the QueryBuilder
+ * @param {ExecuteCallback} callback - Callback function
  */
 QueryBuilder.prototype.execute = function(callback) {
 	if (this.debug) {
@@ -915,6 +1035,45 @@ QueryBuilder.prototype.execute = function(callback) {
 	}
 
 	dbConnection.get().query(this.query, (error, result) => {
+		if (typeof callback === "function") {
+			callback(error, result);
+		} else {
+			console.warn("No valid callback was provided ?!");
+		}
+	});
+};
+
+/**
+ * Adds a subquery to the SQL query
+ *
+ * @param  {QueryBuilder} 	queryBuilder 			New instance of the QueryBuilder to
+ * @param  {string}			[keyName="result"]		Name of the results of the sub query
+ *
+ * @param  {ExecuteCallback} 	callback - Callback function
+ */
+QueryBuilder.prototype.subQuery = function(queryBuilder, keyName = "result") {
+	this.builder.keys.push({
+		key: queryBuilder,
+		as: keyName,
+		type: "subQuery"
+	});
+
+	return this;
+};
+
+/**
+ * Executes the query
+ * Note: requires the database connection to be setup via the DatabaseConnection.connect() function
+ *
+ * @param {string}			sql 		- SQL Query
+ * @param {ExecuteCallback} callback 	- Callback function
+ */
+QueryBuilder.prototype.raw = function(sql, callback) {
+	if (this.debug) {
+		console.log(sql);
+	}
+
+	dbConnection.get().query(sql, (error, result) => {
 		if (typeof callback === "function") {
 			callback(error, result);
 		} else {
@@ -933,14 +1092,19 @@ QueryBuilder.prototype.execute = function(callback) {
  * @return {string}       Escaped key
  */
 QueryBuilder.prototype.escape = function(key) {
-	key = key.toString();
+	try {
+		key = key.toString();
 
-	if (key.includes(".") && !key.includes("`.`")) {
-		let tmp = key.split(".");
-		return "`" + tmp[0] + "`.`" + tmp[1] + "`";
+		if (key.includes(".") && !key.includes("`.`")) {
+			let tmp = key.split(".");
+			return "`" + tmp[0] + "`.`" + tmp[1] + "`";
+		}
+
+		return "`" + key + "`";
+	} catch (e) {
+		console.log(key);
+		throw new Error(e);
 	}
-
-	return "`" + key + "`";
 };
 
 /**
