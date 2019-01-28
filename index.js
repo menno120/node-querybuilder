@@ -791,6 +791,8 @@ QueryBuilder.prototype.prepare = function() {
 							return "COUNT(" + this.escape(key.key) + ") AS " + key.as;
 						} else if(key.type === "fulltext") {
 							return "MATCH (" + key.key + ") AGAINST '" + key.value + "' " + key.mode + " AS " + key.as;
+						} else if(key.type === "subQuery") {
+							return "(" + key.key.prepare().query + ") AS " + key.as;
 						} else { 
 							throw new Error('Unknown select type!');
 						}
@@ -1019,6 +1021,24 @@ QueryBuilder.prototype.execute = function(callback) {
 		}
 	});
 };
+
+/**
+ * Adds a subquery to the SQL query
+ *
+ * @param  {QueryBuilder} 	queryBuilder 			New instance of the QueryBuilder to 
+ * @param  {string}			[keyName="result"]		Name of the results of the sub query
+ *
+ * @param  {ExecuteCallback} 	callback - Callback function
+ */
+QueryBuilder.prototype.subQuery = function(queryBuilder, keyName = "result") {
+	this.builder.keys.push({
+		key: queryBuilder,
+		as: keyName,
+		type: 'subQuery'
+	});
+
+	return this;
+}
 
 /**
  * Executes the query

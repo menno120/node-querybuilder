@@ -21,8 +21,16 @@ function highlightDifferences(str1, str2) {
 	var text =
 		chalk.magenta("Differences: ") +
 		"\r\n\r\n" +
+		chalk.bold.grey("[") +
+		chalk.bold.yellow("ORIGINAL") +
+		chalk.bold.grey("]") + 
+		"   " +
 		chalk.white(str1) +
-		"\r\n\r\n";
+		"\r\n\r\n" +
+		chalk.bold.grey("[") +
+		chalk.bold.yellow("DIFFERENCE") +
+		chalk.bold.grey("]") + 
+		" ";;
 
 	str2.split("").forEach(function(val, i) {
 		if (val === str1.charAt(i)) {
@@ -262,6 +270,34 @@ try {
 	}
 } catch (e) {
 	failed("#10", e);
+}
+
+// Test #11
+try {
+	let test_11 = new QueryBuilder()
+		.select("tablename", ['id','test'])
+		.subQuery(new QueryBuilder().count("tablename", "id").where('user', 1))
+		.orderBy('score', 'ASC')
+		.prepare()
+
+	let test_11_expected = "SELECT `tablename`.`id`,`tablename`.`test`,(SELECT COUNT(`id`) AS count FROM `tablename`  WHERE (`user` = 1)  ) AS result FROM `tablename`   ORDER BY `score` ASC";
+
+	if (test_11.query.trim() !== test_11_expected) {
+		failed(
+			"#11",
+			highlightDifferences(test_11_expected, test_11.query.trim())
+		);
+	} else {
+		passed("#11");
+	}
+
+	console.log("")
+	console.log(test_11.query);
+	console.log("")
+	console.log(test_11.builder);
+	console.log("")
+} catch (e) {
+	failed("#11", e);
 }
 
 console.log("");
