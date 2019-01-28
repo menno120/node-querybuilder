@@ -155,23 +155,32 @@ QueryBuilder.prototype.select = function(table, keys = [], names = []) {
 };
 
 /**
- * Fetch a row from the database
+ * Adds 
  *
- * @param  {string} 	table 				Name of the table you want to select something from
- * @param  {string}  	keys  				The key you want to count
- * @param  {string} 	[keyName="count"] 	The name of the count result
+ * @private
+ *
+ * @param  {string} 	table 		Name of the table you want to select something from
+ * @param  {string}  	key  		The key you want to count
+ * @param  {string} 	keyName 	The name of the count result
+ * @param  {string} 	type 		Type of function (count, avg, sum)
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.count = function(table, key, keyName = "count") {
+QueryBuilder.prototype.selectFunc = function(table, key, keyName, type) {
 	const validation = Joi.validate(
-		{ key, table },
+		{ table, key, keyName, type },
 		Joi.object().keys({
 			table: Joi.string()
 				.min(1)
 				.required(),
 			key: Joi.string()
 				.min(1)
+				.required(),
+			keyName: Joi.string()
+				.min(1)
+				.required(),
+			type: Joi.string()
+				.valid(['count','avg','sum'])
 				.required()
 		})
 	);
@@ -181,12 +190,52 @@ QueryBuilder.prototype.count = function(table, key, keyName = "count") {
 		return this;
 	} else {
 		this.builder.table = table;
-		this.builder.keys.push({ key: key, as: keyName, type: "count" });
+		this.builder.keys.push({ key: key, as: keyName, type: type });
 		this.builder.type = "select";
 
 		return this;
 	}
 };
+
+/**
+ * Adds a COUNT() selector to the select statement
+ *
+ * @param  {string} 	table 				Name of the table you want to select something from
+ * @param  {string}  	key  				The key you want to count
+ * @param  {string} 	[keyName="count"] 	The name of the count result
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.count = function(table, key, keyName = "count") {
+	return this.selectFunc(table, key, keyName, "count");
+};
+
+/**
+ * Adds a AVG() selector to the select statement
+ *
+ * @param  {string} 	table 				Name of the table you want to select something from
+ * @param  {string}  	key  				The key you want to count
+ * @param  {string} 	[keyName="avg"] 	The name of the count result
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.avg = function(table, key, keyName = "avg") {
+	return this.selectFunc(table, key, keyName, "avg");
+}
+
+/**
+ * Adds a sum() selector to the select statement
+ * Note: this function is not yet automaticly escaped, and doesn't work with joins currently
+ *
+ * @param  {string} 	table 				Name of the table you want to select something from
+ * @param  {string}  	sum  				The expression to sum
+ * @param  {string} 	[keyName="sum"] 	The name of the count result
+ *
+ * @return {object} - Current instance of the QueryBuilder
+ */
+QueryBuilder.prototype.sum = function(table, sum, keyName = "sum") {
+	return this.selectFunc(table, sum, keyName, "sum");
+}
 
 /**
  * Adds a row into the database
@@ -788,7 +837,11 @@ QueryBuilder.prototype.prepare = function() {
 						if(typeof key.type === "undefined" || key.type === "simple") {
 							return this.escape(key.key);
 						} else if(key.type === "count") {
-							return "COUNT(" + this.escape(key.key) + ") AS " + key.as;
+							return "COUNT(" + this.escape(this.builder.table +"."+ key.key) + ") AS " + key.as;
+						} else if(key.type === "avg") {
+							return "AVG(" + this.escape(this.builder.table +"."+ key.key) + ") AS " + key.as;
+						} else if(key.type === "sum") {
+							return "SUM(" + key.key + ") AS " + key.as;
 						} else if(key.type === "fulltext") {
 							return "MATCH (" + key.key + ") AGAINST '" + key.value + "' " + key.mode + " AS " + key.as;
 						} else if(key.type === "subQuery") {
