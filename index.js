@@ -33,12 +33,7 @@ DatabaseConnection.prototype.get = function() {
  * @param {string} password 	MySQL server password
  * @param {string} database 	MySQL server database
  */
-DatabaseConnection.prototype.connect = function(
-	host,
-	user,
-	password,
-	database
-) {
+DatabaseConnection.prototype.connect = function(host, user, password, database) {
 	if (host === null) {
 		throw new Error("Host cannot be NULL");
 	}
@@ -113,11 +108,13 @@ QueryBuilder.prototype.select = function(table, keys = [], names = []) {
 			table: Joi.string()
 				.min(1)
 				.required(),
-			keys: Joi.array().items(
-				Joi.string()
-					.min(1)
-					.optional()
-			).optional(),
+			keys: Joi.array()
+				.items(
+					Joi.string()
+						.min(1)
+						.optional()
+				)
+				.optional(),
 			names: Joi.array()
 				.items(Joi.string().min(1))
 				.when("keys", {
@@ -144,9 +141,9 @@ QueryBuilder.prototype.select = function(table, keys = [], names = []) {
 
 		this.builder.table = table;
 		this.builder.type = "select";
-		
+
 		// @TOOD: add names to keys
-		for(let i = 0; i < tmp_keys.length; i++) {
+		for (let i = 0; i < tmp_keys.length; i++) {
 			this.builder.keys.push({ key: tmp_keys[i], as: null, type: "simple" });
 		}
 
@@ -155,7 +152,7 @@ QueryBuilder.prototype.select = function(table, keys = [], names = []) {
 };
 
 /**
- * Adds 
+ * Adds
  *
  * @private
  *
@@ -180,7 +177,7 @@ QueryBuilder.prototype.selectFunc = function(table, key, keyName, type) {
 				.min(1)
 				.required(),
 			type: Joi.string()
-				.valid(['count','avg','sum'])
+				.valid(["count", "avg", "sum"])
 				.required()
 		})
 	);
@@ -221,7 +218,7 @@ QueryBuilder.prototype.count = function(table, key, keyName = "count") {
  */
 QueryBuilder.prototype.avg = function(table, key, keyName = "avg") {
 	return this.selectFunc(table, key, keyName, "avg");
-}
+};
 
 /**
  * Adds a sum() selector to the select statement
@@ -235,7 +232,7 @@ QueryBuilder.prototype.avg = function(table, key, keyName = "avg") {
  */
 QueryBuilder.prototype.sum = function(table, sum, keyName = "sum") {
 	return this.selectFunc(table, sum, keyName, "sum");
-}
+};
 
 /**
  * Adds a row into the database
@@ -363,7 +360,7 @@ QueryBuilder.prototype.truncate = function(table) {
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.fulltext = function(index, value, mode, keyName = 'score') {
+QueryBuilder.prototype.fulltext = function(index, value, mode, keyName = "score") {
 	const validation = Joi.validate(
 		{ index, value, mode, keyName },
 		Joi.object().keys({
@@ -379,8 +376,8 @@ QueryBuilder.prototype.fulltext = function(index, value, mode, keyName = 'score'
 	if (validation.error) {
 		throw new Error(validation.error);
 	} else {
-		if(this.builder.type !== "select") {
-			throw new Error('Fulltext select is only availible for select queries currently!');
+		if (this.builder.type !== "select") {
+			throw new Error("Fulltext select is only availible for select queries currently!");
 		}
 
 		if (mode === FULLTEXT_MODES.BOOLEAN_MODE) {
@@ -397,7 +394,7 @@ QueryBuilder.prototype.fulltext = function(index, value, mode, keyName = 'score'
 			value: value,
 			mode: mode,
 			operator: "MATCH",
-			type: 'fulltext'
+			type: "fulltext"
 		});
 		this.builder.type = "select";
 	}
@@ -416,12 +413,7 @@ QueryBuilder.prototype.fulltext = function(index, value, mode, keyName = 'score'
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.where = function(
-	key,
-	value,
-	operator = "=",
-	type = null
-) {
+QueryBuilder.prototype.where = function(key, value, operator = "=", type = null) {
 	const validation = Joi.validate(
 		{ key, value, operator, type },
 		Joi.object().keys({
@@ -523,9 +515,7 @@ QueryBuilder.prototype.whereBetween = function(key, min, max, type = null) {
 		throw new Error(validation.error);
 	} else {
 		if (type === null && this.builder.where.length > 0) {
-			throw new Error(
-				"Please specify the type of the between (OR | AND)"
-			);
+			throw new Error("Please specify the type of the between (OR | AND)");
 		}
 
 		this.builder.where.push({
@@ -578,10 +568,7 @@ QueryBuilder.prototype.whereFulltext = function(key, value, mode, type = null) {
 			key: Joi.string().required(),
 			value: Joi.string().required(),
 			mode: Joi.any()
-				.valid([
-					FULLTEXT_MODES.NATURAL_LANGUAGE_MODE,
-					FULLTEXT_MODES.BOOLEAN_MODE
-				])
+				.valid([FULLTEXT_MODES.NATURAL_LANGUAGE_MODE, FULLTEXT_MODES.BOOLEAN_MODE])
 				.required(),
 			type: Joi.any()
 				.valid(["OR", "AND", null])
@@ -593,9 +580,7 @@ QueryBuilder.prototype.whereFulltext = function(key, value, mode, type = null) {
 		throw new Error(validation.error);
 	} else {
 		if (type === null && this.builder.where.length > 0) {
-			throw new Error(
-				"Please specify the type of the between (OR | AND)"
-			);
+			throw new Error("Please specify the type of the between (OR | AND)");
 		}
 
 		if (mode === FULLTEXT_MODES.BOOLEAN_MODE) {
@@ -834,20 +819,20 @@ QueryBuilder.prototype.prepare = function() {
 				"SELECT " +
 				this.builder.keys
 					.map(key => {
-						if(typeof key.type === "undefined" || key.type === "simple") {
+						if (typeof key.type === "undefined" || key.type === "simple") {
 							return this.escape(key.key);
-						} else if(key.type === "count") {
-							return "COUNT(" + this.escape(this.builder.table +"."+ key.key) + ") AS " + key.as;
-						} else if(key.type === "avg") {
-							return "AVG(" + this.escape(this.builder.table +"."+ key.key) + ") AS " + key.as;
-						} else if(key.type === "sum") {
+						} else if (key.type === "count") {
+							return "COUNT(" + this.escape(this.builder.table + "." + key.key) + ") AS " + key.as;
+						} else if (key.type === "avg") {
+							return "AVG(" + this.escape(this.builder.table + "." + key.key) + ") AS " + key.as;
+						} else if (key.type === "sum") {
 							return "SUM(" + key.key + ") AS " + key.as;
-						} else if(key.type === "fulltext") {
+						} else if (key.type === "fulltext") {
 							return "MATCH (" + key.key + ") AGAINST '" + key.value + "' " + key.mode + " AS " + key.as;
-						} else if(key.type === "subQuery") {
+						} else if (key.type === "subQuery") {
 							return "(" + key.key.prepare().query + ") AS " + key.as;
-						} else { 
-							throw new Error('Unknown select type!');
+						} else {
+							throw new Error("Unknown select type!");
 						}
 					})
 					.join(",") +
@@ -876,9 +861,7 @@ QueryBuilder.prototype.prepare = function() {
 
 			for (let i = 0; i < this.builder.keys.length; i++) {
 				tmp_values.push(
-					this.escape(this.builder.keys[i]) +
-						"=" +
-						this.builder.values[i] // @TOOD: escape
+					this.escape(this.builder.keys[i]) + "=" + this.builder.values[i] // @TOOD: escape
 				);
 			}
 
@@ -917,9 +900,7 @@ QueryBuilder.prototype.prepare = function() {
 				" " +
 				(joinClause.value.includes(".")
 					? this.escape(joinClause.value)
-					: this.escape(
-							this.builder.table + "." + joinClause.value
-					  )) +
+					: this.escape(this.builder.table + "." + joinClause.value)) +
 				""
 		);
 	});
@@ -951,24 +932,14 @@ QueryBuilder.prototype.prepare = function() {
 
 		let tmp = clauses.map((clause, i) => {
 			if (clause.operator === "MATCH") {
-				return (
-					"MATCH (" +
-					clause.key +
-					") AGAINST '" +
-					clause.value +
-					"' " +
-					clause.mode +
-					""
-				);
+				return "MATCH (" + clause.key + ") AGAINST '" + clause.value + "' " + clause.mode + "";
 			} else {
 				return (
 					this.escape(clause.key) +
 					" " +
 					clause.operator +
 					" " +
-					(typeof clause.value === "string"
-						? "'" + clause.value + "'"
-						: clause.value)
+					(typeof clause.value === "string" ? "'" + clause.value + "'" : clause.value)
 				);
 			}
 		});
@@ -1010,10 +981,7 @@ QueryBuilder.prototype.prepare = function() {
 		limit = "LIMIT " + this.builder.limit.offset;
 	}
 	if (this.builder.limit.amount !== null) {
-		if (
-			this.builder.limit.offset === null &&
-			this.builder.limit.amount !== null
-		) {
+		if (this.builder.limit.offset === null && this.builder.limit.amount !== null) {
 			throw new Error("You can't set an amount without an offset");
 		}
 		limit += ", " + this.builder.limit.amount;
@@ -1078,7 +1046,7 @@ QueryBuilder.prototype.execute = function(callback) {
 /**
  * Adds a subquery to the SQL query
  *
- * @param  {QueryBuilder} 	queryBuilder 			New instance of the QueryBuilder to 
+ * @param  {QueryBuilder} 	queryBuilder 			New instance of the QueryBuilder to
  * @param  {string}			[keyName="result"]		Name of the results of the sub query
  *
  * @param  {ExecuteCallback} 	callback - Callback function
@@ -1087,15 +1055,15 @@ QueryBuilder.prototype.subQuery = function(queryBuilder, keyName = "result") {
 	this.builder.keys.push({
 		key: queryBuilder,
 		as: keyName,
-		type: 'subQuery'
+		type: "subQuery"
 	});
 
 	return this;
-}
+};
 
 /**
  * Executes the query
- * Note: request the database connection to be setup via the DatabaseConnection.connect() function
+ * Note: requires the database connection to be setup via the DatabaseConnection.connect() function
  *
  * @param {string}			sql 		- SQL Query
  * @param {ExecuteCallback} callback 	- Callback function
@@ -1133,9 +1101,9 @@ QueryBuilder.prototype.escape = function(key) {
 		}
 
 		return "`" + key + "`";
-	} catch(e) { 
-		console.log(key); 
-		throw new Error(e) 
+	} catch (e) {
+		console.log(key);
+		throw new Error(e);
 	}
 };
 
@@ -1145,11 +1113,7 @@ QueryBuilder.prototype.escape = function(key) {
  * @private
  */
 QueryBuilder.prototype.message = function() {
-	console.group(
-		"----------- " +
-			chalk.yellowBright.bold("[QueryBuilder]") +
-			" -----------"
-	);
+	console.group("----------- " + chalk.yellowBright.bold("[QueryBuilder]") + " -----------");
 	for (let i = 0; i < arguments.length; i++) {
 		console.warn(arguments[i]);
 	}
