@@ -464,6 +464,7 @@ QueryBuilder.prototype.where = function(key, value, operator = "=", type = null,
  * @param  {string} 	key      		The key you want to check
  * @param  {string} 	value    		The value you want to check against
  * @param  {string} 	operator		Comparison operator
+ * @param  {boolean} 	[escape=true] 	Boolean indicating if the value should be escaped
  *
  * @return {object} - Current instance of the QueryBuilder
  */
@@ -478,6 +479,7 @@ QueryBuilder.prototype.orWhere = function(key, value, operator = "=", escape = t
  * @param  {string} 	key      		The key you want to check
  * @param  {string} 	value    		The value you want to check against
  * @param  {string} 	operator		Comparison operator
+ * @param  {boolean} 	[escape=true] 	Boolean indicating if the value should be escaped
  *
  * @return {object} - Current instance of the QueryBuilder
  */
