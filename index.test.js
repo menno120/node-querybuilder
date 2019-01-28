@@ -78,7 +78,7 @@ try {
 		.where("type", "something")
 		.prepare();
 
-	let test_2_expected = "SELECT COUNT(`tablename`.`id`) AS count FROM `tablename`  WHERE (`type` = 'something')";
+	let test_2_expected = "SELECT COUNT(`tablename`.`id`) AS 'count' FROM `tablename`  WHERE (`type` = 'something')";
 
 	if (test_2.query.trim() !== test_2_expected) {
 		failed("#2", highlightDifferences(test_2_expected, test_2.query.trim()));
@@ -246,7 +246,7 @@ try {
 		.prepare();
 
 	let test_11_expected =
-		"SELECT `tablename`.`id`,`tablename`.`test`,(SELECT COUNT(`tablename`.`id`) AS count FROM `tablename`  WHERE (`user` = 1)  ) AS result FROM `tablename`   ORDER BY `score` ASC";
+		"SELECT `tablename`.`id`,`tablename`.`test`,(SELECT COUNT(`tablename`.`id`) AS 'count' FROM `tablename`  WHERE (`user` = 1)  ) AS result FROM `tablename`   ORDER BY `score` ASC";
 
 	if (test_11.query.trim() !== test_11_expected) {
 		failed("#11", highlightDifferences(test_11_expected, test_11.query.trim()));
@@ -266,7 +266,7 @@ try {
 		.prepare();
 
 	let test_12_expected =
-		"SELECT `tablename`.`id`,`tablename`.`name`,`tablename`.`price`,AVG(`tablename`.`price`) AS avg FROM `tablename`   ORDER BY `price` DESC";
+		"SELECT `tablename`.`id`,`tablename`.`name`,`tablename`.`price`,AVG(`tablename`.`price`) AS 'avg' FROM `tablename`   ORDER BY `price` DESC";
 
 	if (test_12.query.trim() !== test_12_expected) {
 		failed("#12", highlightDifferences(test_12_expected, test_12.query.trim()));

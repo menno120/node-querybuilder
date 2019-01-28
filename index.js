@@ -409,11 +409,12 @@ QueryBuilder.prototype.fulltext = function(index, value, mode, keyName = "score"
  * @param  {string} 	key      		The key you want to check
  * @param  {string} 	value    		The value you want to check against
  * @param  {string} 	operator		Comparison operator
- * @param  {string} 	type			Type of where clause ('OR','AND')
+ * @param  {string?} 	[type=null]		Type of where clause ('OR','AND')
+ * @param  {boolean} 	[escape=true] 	Boolean indicating if the value should be escaped
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.where = function(key, value, operator = "=", type = null) {
+QueryBuilder.prototype.where = function(key, value, operator = "=", type = null, escape = true) {
 	const validation = Joi.validate(
 		{ key, value, operator, type },
 		Joi.object().keys({
@@ -448,7 +449,8 @@ QueryBuilder.prototype.where = function(key, value, operator = "=", type = null)
 			key: key,
 			value: value,
 			operator: operator,
-			type: type
+			type: type, 
+			escape: escape
 		});
 
 		return this;
@@ -465,8 +467,8 @@ QueryBuilder.prototype.where = function(key, value, operator = "=", type = null)
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.orWhere = function(key, value, operator = "=") {
-	return this.where(key, value, operator, "OR");
+QueryBuilder.prototype.orWhere = function(key, value, operator = "=", escape = true) {
+	return this.where(key, value, operator, "OR", escape);
 };
 
 /**
@@ -479,8 +481,8 @@ QueryBuilder.prototype.orWhere = function(key, value, operator = "=") {
  *
  * @return {object} - Current instance of the QueryBuilder
  */
-QueryBuilder.prototype.andWhere = function(key, value, operator = "=") {
-	return this.where(key, value, operator, "AND");
+QueryBuilder.prototype.andWhere = function(key, value, operator = "=", escape = true) {
+	return this.where(key, value, operator, "AND", escape);
 };
 
 /**
@@ -822,11 +824,11 @@ QueryBuilder.prototype.prepare = function() {
 						if (typeof key.type === "undefined" || key.type === "simple") {
 							return this.escape(key.key);
 						} else if (key.type === "count") {
-							return "COUNT(" + this.escape(this.builder.table + "." + key.key) + ") AS " + key.as;
+							return "COUNT(" + this.escape(this.builder.table + "." + key.key) + ") AS '" + key.as + "'";
 						} else if (key.type === "avg") {
-							return "AVG(" + this.escape(this.builder.table + "." + key.key) + ") AS " + key.as;
+							return "AVG(" + this.escape(this.builder.table + "." + key.key) + ") AS '" + key.as + "'";
 						} else if (key.type === "sum") {
-							return "SUM(" + key.key + ") AS " + key.as;
+							return "SUM(" + key.key + ") AS '" + key.as + "'";
 						} else if (key.type === "fulltext") {
 							return "MATCH (" + key.key + ") AGAINST '" + key.value + "' " + key.mode + " AS " + key.as;
 						} else if (key.type === "subQuery") {
@@ -939,7 +941,7 @@ QueryBuilder.prototype.prepare = function() {
 					" " +
 					clause.operator +
 					" " +
-					(typeof clause.value === "string" ? "'" + clause.value + "'" : clause.value)
+					(typeof clause.value === "string" && clause.escape === true ? "'" + clause.value + "'" : clause.value)
 				);
 			}
 		});
@@ -1050,7 +1052,7 @@ QueryBuilder.prototype.execute = function(callback) {
  * @param  {string}			[keyName="result"]		Name of the results of the sub query
  *
  * @param  {ExecuteCallback} 	callback - Callback function
- */
+ */6
 QueryBuilder.prototype.subQuery = function(queryBuilder, keyName = "result") {
 	this.builder.keys.push({
 		key: queryBuilder,
