@@ -268,6 +268,7 @@ try {
 	let test_12_expected =
 		"SELECT `tablename`.`id`,`tablename`.`name`,`tablename`.`price`,AVG(`tablename`.`price`) AS `avg` FROM `tablename`   ORDER BY `price` DESC";
 
+
 	if (test_12.query.trim() !== test_12_expected) {
 		failed("#12", highlightDifferences(test_12_expected, test_12.query.trim()));
 	} else {
