@@ -1,4 +1,9 @@
-let { QueryBuilder, DatabaseConnection, FULLTEXT_MODES } = require("./index");
+let {
+	QueryBuilder,
+	DatabaseConnection,
+	reference,
+	FULLTEXT_MODES
+} = require("./index");
 let chalk = require("chalk");
 
 let stats = { failed: 0, passed: 0 };
@@ -63,7 +68,10 @@ try {
 		"SELECT `tablename`.`id`,`tablename`.`username`,`tablename`.`email` FROM `tablename`  WHERE (`id` = 1 AND `email` = 'someone@example.com') OR (`id` = 2) OR (`id` = 3 AND `username` = 'test') ORDER BY `id` ASC";
 
 	if (test_1.query.trim() !== test_1_expected) {
-		failed("#1", highlightDifferences(test_1_expected, test_1.query.trim()));
+		failed(
+			"#1",
+			highlightDifferences(test_1_expected, test_1.query.trim())
+		);
 	} else {
 		passed("#1");
 	}
@@ -78,10 +86,14 @@ try {
 		.where("type", "something")
 		.prepare();
 
-	let test_2_expected = "SELECT COUNT(`tablename`.`id`) AS count FROM `tablename`  WHERE (`type` = 'something')";
+	let test_2_expected =
+		"SELECT COUNT(`tablename`.`id`) AS count FROM `tablename`  WHERE (`type` = 'something')";
 
 	if (test_2.query.trim() !== test_2_expected) {
-		failed("#2", highlightDifferences(test_2_expected, test_2.query.trim()));
+		failed(
+			"#2",
+			highlightDifferences(test_2_expected, test_2.query.trim())
+		);
 	} else {
 		passed("#2");
 	}
@@ -114,9 +126,9 @@ try {
 try {
 	let test_4 = new QueryBuilder()
 		.select("tablename", ["id", "name"])
-		.leftJoin("tablename2", "id", "tablename.id")
-		.rightJoin("tablename3", "id", "tablename.id")
-		.innerJoin("tablename4", "id", "tablename.id")
+		.leftJoin("tablename2", "id", reference("tablename", "id"))
+		.rightJoin("tablename3", "id", reference("tablename", "id"))
+		.innerJoin("tablename4", "id", reference("tablename", "id"))
 		.where("id", 1)
 		.limit(0, 20)
 		.prepare();
@@ -124,7 +136,10 @@ try {
 	let test_4_expected =
 		"SELECT `tablename`.`id`,`tablename`.`name` FROM `tablename` LEFT JOIN `tablename2` ON `tablename2`.`id` = `tablename`.`id` RIGHT JOIN `tablename3` ON `tablename3`.`id` = `tablename`.`id` INNER JOIN `tablename4` ON `tablename4`.`id` = `tablename`.`id` WHERE (`id` = 1)  LIMIT 0, 20";
 	if (test_4.query.trim() !== test_4_expected) {
-		failed("#4", highlightDifferences(test_4_expected, test_4.query.trim()));
+		failed(
+			"#4",
+			highlightDifferences(test_4_expected, test_4.query.trim())
+		);
 	} else {
 		passed("#4");
 	}
@@ -136,14 +151,21 @@ try {
 try {
 	let test_5 = new QueryBuilder()
 		.select("tablename", ["id", "name"])
-		.whereFulltext("summary,description", "Keywords here ...", FULLTEXT_MODES.NATURAL_LANGUAGE_MODE)
+		.whereFulltext(
+			"summary,description",
+			"Keywords here ...",
+			FULLTEXT_MODES.NATURAL_LANGUAGE_MODE
+		)
 		.limit(0, 20)
 		.prepare();
 
 	let test_5_expected =
 		"SELECT `tablename`.`id`,`tablename`.`name` FROM `tablename`  WHERE (MATCH (summary,description) AGAINST 'Keywords here ...' IN NATURAL LANGUAGE MODE)  LIMIT 0, 20";
 	if (test_5.query.trim() !== test_5_expected) {
-		failed("#5", highlightDifferences(test_5_expected, test_5.query.trim()));
+		failed(
+			"#5",
+			highlightDifferences(test_5_expected, test_5.query.trim())
+		);
 	} else {
 		passed("#5");
 	}
@@ -153,12 +175,18 @@ try {
 
 // Test #6 - Insert
 try {
-	let test_6 = new QueryBuilder().insert("tablename", { firstame: "John", lastname: "Doe" }).prepare();
+	let test_6 = new QueryBuilder()
+		.insert("tablename", { firstame: "John", lastname: "Doe" })
+		.prepare();
 
-	let test_6_expected = "INSERT INTO `tablename` (`firstame`,`lastname`) VALUES ('John','Doe')";
+	let test_6_expected =
+		"INSERT INTO `tablename` (`firstame`,`lastname`) VALUES ('John','Doe')";
 
 	if (test_6.query.trim() !== test_6_expected) {
-		failed("#6", highlightDifferences(test_6_expected, test_6.query.trim()));
+		failed(
+			"#6",
+			highlightDifferences(test_6_expected, test_6.query.trim())
+		);
 	} else {
 		passed("#6");
 	}
@@ -173,10 +201,14 @@ try {
 		.where("id", 1)
 		.prepare();
 
-	let test_7_expected = "UPDATE `tablename` SET `firstame`=John, `lastname`=Doe  WHERE (`id` = 1)";
+	let test_7_expected =
+		"UPDATE `tablename` SET `firstame`=John, `lastname`=Doe  WHERE (`id` = 1)";
 
 	if (test_7.query.trim() !== test_7_expected) {
-		failed("#7", highlightDifferences(test_7_expected, test_7.query.trim()));
+		failed(
+			"#7",
+			highlightDifferences(test_7_expected, test_7.query.trim())
+		);
 	} else {
 		passed("#7");
 	}
@@ -194,7 +226,10 @@ try {
 	let test_8_expected = "DELETE FROM `tablename`  WHERE (`id` = 1)";
 
 	if (test_8.query.trim() !== test_8_expected) {
-		failed("#8", highlightDifferences(test_8_expected, test_8.query.trim()));
+		failed(
+			"#8",
+			highlightDifferences(test_8_expected, test_8.query.trim())
+		);
 	} else {
 		passed("#8");
 	}
@@ -209,7 +244,10 @@ try {
 	let test_9_expected = "TRUNCATE `tablename`";
 
 	if (test_9.query.trim() !== test_9_expected) {
-		failed("#9", highlightDifferences(test_9_expected, test_9.query.trim()));
+		failed(
+			"#9",
+			highlightDifferences(test_9_expected, test_9.query.trim())
+		);
 	} else {
 		passed("#9");
 	}
@@ -229,7 +267,10 @@ try {
 		"SELECT MATCH (title,description) AGAINST 'text' IN BOOLEAN MODE AS score FROM `tablename`   ORDER BY `score` ASC";
 
 	if (test_10.query.trim() !== test_10_expected) {
-		failed("#10", highlightDifferences(test_10_expected, test_10.query.trim()));
+		failed(
+			"#10",
+			highlightDifferences(test_10_expected, test_10.query.trim())
+		);
 	} else {
 		passed("#10");
 	}
@@ -249,7 +290,10 @@ try {
 		"SELECT `tablename`.`id`,`tablename`.`test`,(SELECT COUNT(`tablename`.`id`) AS count FROM `tablename`  WHERE (`user` = 1)  ) AS result FROM `tablename`   ORDER BY `score` ASC";
 
 	if (test_11.query.trim() !== test_11_expected) {
-		failed("#11", highlightDifferences(test_11_expected, test_11.query.trim()));
+		failed(
+			"#11",
+			highlightDifferences(test_11_expected, test_11.query.trim())
+		);
 	} else {
 		passed("#11");
 	}
@@ -269,7 +313,10 @@ try {
 		"SELECT `tablename`.`id`,`tablename`.`name`,`tablename`.`price`,AVG(`tablename`.`price`) AS avg FROM `tablename`   ORDER BY `price` DESC";
 
 	if (test_12.query.trim() !== test_12_expected) {
-		failed("#12", highlightDifferences(test_12_expected, test_12.query.trim()));
+		failed(
+			"#12",
+			highlightDifferences(test_12_expected, test_12.query.trim())
+		);
 	} else {
 		passed("#12");
 	}
@@ -279,7 +326,12 @@ try {
 
 console.log("");
 console.info(
-	"Total tests: " + (stats.failed + stats.passed) + ", Passed: " + stats.passed + ", Failed: " + stats.failed
+	"Total tests: " +
+		(stats.failed + stats.passed) +
+		", Passed: " +
+		stats.passed +
+		", Failed: " +
+		stats.failed
 );
 console.log("");
 
