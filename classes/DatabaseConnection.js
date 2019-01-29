@@ -34,12 +34,7 @@ DatabaseConnection.prototype.get = function() {
  * @param {string} password 	MySQL server password
  * @param {string} database 	MySQL server database
  */
-DatabaseConnection.prototype.connect = function(
-	host,
-	user,
-	password,
-	database
-) {
+DatabaseConnection.prototype.connect = function(host, user, password, database) {
 	if (host === null) {
 		throw new Error("Host cannot be NULL");
 	}

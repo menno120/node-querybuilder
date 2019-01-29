@@ -1,9 +1,4 @@
-const {
-	QueryBuilder,
-	DatabaseConnection,
-	FULLTEXT_MODES,
-	reference
-} = require("./classes/QueryBuilder");
+const { QueryBuilder, DatabaseConnection, FULLTEXT_MODES, reference } = require("./classes/QueryBuilder");
 
 // Export
 module.exports = {
