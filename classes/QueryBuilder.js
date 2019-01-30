@@ -717,16 +717,14 @@ QueryBuilder.prototype.prepare = function() {
 				" JOIN " +
 				this.escape(joinClause.table) +
 				" ON " +
-				(joinClause.key.includes(".")
-					? this.escape(joinClause.key)
+				(typeof joinClause.key === "object" && joinClause.key.type === "reference"
+					? this.escape(joinClause.key.table + "." + joinClause.key.key)
 					: this.escape(joinClause.table + "." + joinClause.key)) +
 				" " +
 				joinClause.operator +
 				" " +
 				(typeof joinClause.value === "object" && joinClause.value.type === "reference"
-					? "`" + joinClause.value.table + "`.`" + joinClause.value.key + "`"
-					: joinClause.value.includes(".")
-					? this.escape(joinClause.value)
+					? this.escape(joinClause.value.table + "`.`" + joinClause.value.key)
 					: this.escape(this.builder.table + "." + joinClause.value)) +
 				""
 		);
@@ -766,8 +764,8 @@ QueryBuilder.prototype.prepare = function() {
 					" " +
 					clause.operator +
 					" " +
-					(typeof joinClause.value === "object" && joinClause.value.type === "reference"
-						? "`" + joinClause.value.table + "`.`" + joinClause.value.key + "`"
+					(typeof clause.value === "object" && clause.value.type === "reference"
+						? "`" + clause.value.table + "`.`" + clause.value.key + "`"
 						: typeof clause.value === "string"
 						? "'" + clause.value + "'"
 						: clause.value)
