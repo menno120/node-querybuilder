@@ -1,6 +1,5 @@
 const Joi = require("joi");
 const chalk = require("chalk");
-const DatabaseConnection = require("./DatabaseConnection");
 
 // Valid MySQL operators
 const operators = {
@@ -12,9 +11,10 @@ const FULLTEXT_MODES = {
 	NATURAL_LANGUAGE_MODE: 1,
 	BOOLEAN_MODE: 2
 };
-
-// Database connection
-const dbConnection = new DatabaseConnection();
+const SORT_ORDERS = {
+	ASC: 1,
+	DESC: 2
+};
 
 /**
  * References an another table
@@ -120,8 +120,6 @@ QueryBuilder.prototype.select = function(table, keys = [], names = []) {
 /**
  * ...
  *
- * @private
- *
  * @param  {string} 	table 		Name of the table you want to select something from
  * @param  {string}  	key  		The key you want to count
  * @param  {string} 	keyName 	The name of the count result
@@ -158,46 +156,6 @@ QueryBuilder.prototype.selectFunc = function(table, key, keyName, type) {
 
 		return this;
 	}
-};
-
-/**
- * Adds a COUNT() selector to the select statement
- *
- * @param  {string} 	table 				Name of the table you want to select something from
- * @param  {string}  	key  				The key you want to count
- * @param  {string} 	[keyName="count"] 	The name of the count result
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.count = function(table, key, keyName = "count") {
-	return this.selectFunc(table, key, keyName, "count");
-};
-
-/**
- * Adds a AVG() selector to the select statement
- *
- * @param  {string} 	table 				Name of the table you want to select something from
- * @param  {string}  	key  				The key you want to count
- * @param  {string} 	[keyName="avg"] 	The name of the count result
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.avg = function(table, key, keyName = "avg") {
-	return this.selectFunc(table, key, keyName, "avg");
-};
-
-/**
- * Adds a sum() selector to the select statement
- * Note: this function is not yet automaticly escaped, and doesn't work with joins currently
- *
- * @param  {string} 	table 				Name of the table you want to select something from
- * @param  {string}  	sum  				The expression to sum
- * @param  {string} 	[keyName="sum"] 	The name of the count result
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.sum = function(table, sum, keyName = "sum") {
-	return this.selectFunc(table, sum, keyName, "sum");
 };
 
 /**
@@ -422,34 +380,6 @@ QueryBuilder.prototype.where = function(key, value, operator = "=", type = null)
 };
 
 /**
- * Adds a OR clause to the where clause to the SQL statement
- * Note: Should be uses after the where() function to prevent errors
- *
- * @param  {string} 	key      		The key you want to check
- * @param  {string} 	value    		The value you want to check against
- * @param  {string} 	operator		Comparison operator
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.orWhere = function(key, value, operator = "=") {
-	return this.where(key, value, operator, "OR");
-};
-
-/**
- * Adds a AND clause to the where clause to the SQL statement
- * Note: Should be uses after the where() function to prevent errors
- *
- * @param  {string} 	key      		The key you want to check
- * @param  {string} 	value    		The value you want to check against
- * @param  {string} 	operator		Comparison operator
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.andWhere = function(key, value, operator = "=") {
-	return this.where(key, value, operator, "AND");
-};
-
-/**
  * Adds a between where clause to the SQL statement
  *
  * @param  {string} 	key      		The key you want to check
@@ -493,28 +423,6 @@ QueryBuilder.prototype.whereBetween = function(key, min, max, type = null) {
 
 		return this;
 	}
-};
-
-/**
- * Adds a OR between where clause to the SQL statement
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.orWhereBetween = function(key, min, max) {
-	return this.between(key, min, max, "OR");
-};
-
-/**
- * Adds a AND between where clause to the SQL statement
- *
- * @param  {string} 	key      		The key you want to check
- * @param  {int} 	    min    		    The minium value for the given key
- * @param  {int} 	    max		        The maximum value for the given key
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.andWhereBetween = function(key, min, max) {
-	return this.between(key, min, max, "AND");
 };
 
 /**
@@ -570,32 +478,6 @@ QueryBuilder.prototype.whereFulltext = function(key, value, mode, type = null) {
 };
 
 /**
- * Adds a fulltext where statement to the SQL query
- *
- * @param  {string} 			key      		The key you want to check, example: 'title,body'
- * @param  {string} 			value    		The keywords to search for
- * @param  {FULLTEXT_MODES} 	mode		    The fulltext mode (NATURAL LANGUAGE or BOOLEAN)
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.orWhereFulltext = function(key, value, mode) {
-	return this.whereFulltext(key, value, mode, "OR");
-};
-
-/**
- * Adds a fulltext where statement to the SQL query
- *
- * @param  {string} 			key      		The key you want to check, example: 'title,body'
- * @param  {string} 			value    		The keywords to search for
- * @param  {FULLTEXT_MODES} 	mode		    The fulltext mode (NATURAL LANGUAGE or BOOLEAN)
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.andWhereFulltext = function(key, value, mode) {
-	return this.whereFulltext(key, value, mode, "AND");
-};
-
-/**
  * Add a join to the SQL query
  *
  * @param  {string} 	table    	The table you want to join
@@ -643,51 +525,9 @@ QueryBuilder.prototype.join = function(table, key, value, operator, joinType) {
 };
 
 /**
- * Add a left join to the SQL query
- *
- * @param  {string} 	table    			The table you want to join
- * @param  {string} 	key      			The key to compare
- * @param  {string} 	value    			The value to compare the key to
- * @param  {string} 	[operator = '=']	Check operator
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.leftJoin = function(table, key, value, operator = "=") {
-	return this.join(table, key, value, operator, "left");
-};
-
-/**
- * Add a right join to the SQL query
- *
- * @param  {string} 	table    			The table you want to join
- * @param  {string} 	key      			The key to compare
- * @param  {string} 	value    			The value to compare the key to
- * @param  {string} 	[operator = '=']	Check operator
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.rightJoin = function(table, key, value, operator = "=") {
-	return this.join(table, key, value, operator, "right");
-};
-
-/**
- * Add a inner join to the SQL query
- *
- * @param  {string} 	table    			The table you want to join
- * @param  {string} 	key      			The key to compare
- * @param  {string} 	value    			The value to compare the key to
- * @param  {string} 	[operator = '=']	Check operator
- *
- * @return {object} - Current instance of the QueryBuilder
- */
-QueryBuilder.prototype.innerJoin = function(table, key, value, operator = "=") {
-	return this.join(table, key, value, operator, "inner");
-};
-
-/**
  * Orders the results by the given key
  *
- * @todo: allow multiple keys
+ * @todo: allow multiple order by keys
  *
  * @param  {string} key 					- The key to order by
  * @param  {string} [sortOrder = 'ASC'] 	- The order to sort in 'ASC' or 'DESC'
@@ -729,8 +569,8 @@ QueryBuilder.prototype.orderByCase = function() {
 /**
  * Limits the amount of data the database should return
  *
- * @param {int} offset - Start returning from this point
- * @param {int} amount - The amount of items that should be returned
+ * @param {int} [offset=0] - Start returning from this point
+ * @param {int} [amount=25] - The amount of items that should be returned
  *
  * @return {object} - Current instance of the QueryBuilder
  */
@@ -812,7 +652,7 @@ QueryBuilder.prototype.prepare = function() {
 								this.escape(key.as)
 							);
 						} else if (key.type === "subQuery") {
-							return "(" + key.key.prepare().query + ") AS " + this.escape(key.as);
+							return "(" + key.key.builder.prepare().query + ") AS " + this.escape(key.as);
 						} else {
 							throw new Error("Unknown select type!");
 						}
@@ -1001,39 +841,12 @@ QueryBuilder.prototype.prepare = function() {
 };
 
 /**
- * Execute callback
- * @callback ExecuteCallback
- * @param {?error} error - Query error
- * @param {?result} result - Query results
- */
-
-/**
- * Executes the query
- * Note: request the database connection to be setup via the DatabaseConnection.connect() function
- *
- * @param {ExecuteCallback} callback - Callback function
- */
-QueryBuilder.prototype.execute = function(callback) {
-	if (this.debug) {
-		console.log("QueryBuilder - [EXECUTE]", this.query);
-	}
-
-	dbConnection.get().query(this.query, (error, result) => {
-		if (typeof callback === "function") {
-			callback(error, result);
-		} else {
-			console.warn("No valid callback was provided ?!");
-		}
-	});
-};
-
-/**
  * Adds a subquery to the SQL query
  *
  * @param  {QueryBuilder} 	queryBuilder 			New instance of the QueryBuilder to
  * @param  {string}			[keyName="result"]		Name of the results of the sub query
  *
- * @param  {ExecuteCallback} 	callback - Callback function
+ * @return {object} - Current instance of the QueryBuilder
  */
 QueryBuilder.prototype.subQuery = function(queryBuilder, keyName = "result") {
 	this.builder.keys.push({
@@ -1051,25 +864,15 @@ QueryBuilder.prototype.subQuery = function(queryBuilder, keyName = "result") {
  *
  * @param {string}			sql 		- SQL Query
  * @param {ExecuteCallback} callback 	- Callback function
+ *
+ * @return {object} - Current instance of the QueryBuilder
  */
 QueryBuilder.prototype.raw = function(sql, callback) {
-	if (this.debug) {
-		console.log(sql);
-	}
-
-	dbConnection.get().query(sql, (error, result) => {
-		if (typeof callback === "function") {
-			callback(error, result);
-		} else {
-			console.warn("No valid callback was provided ?!");
-		}
-	});
+	throw new Error("Not implemented yet!");
 };
 
 /**
  * Escaped the given key with a: (`)
- *
- * @private
  *
  * @param  {string} key - Key to escape
  *
@@ -1093,8 +896,6 @@ QueryBuilder.prototype.escape = function(key) {
 
 /**
  * Show message
- *
- * @private
  */
 QueryBuilder.prototype.message = function() {
 	console.group("----------- " + chalk.yellowBright.bold("[QueryBuilder]") + " -----------");
@@ -1108,8 +909,6 @@ QueryBuilder.prototype.message = function() {
 /**
  * Show error message
  *
- * @private
- *
  * @param  {string} err - The error message to show
  */
 QueryBuilder.prototype.error = function(err) {
@@ -1120,7 +919,7 @@ QueryBuilder.prototype.error = function(err) {
 
 module.exports = {
 	QueryBuilder: QueryBuilder,
-	DatabaseConnection: dbConnection,
 	reference: reference,
-	FULLTEXT_MODES: FULLTEXT_MODES
+	FULLTEXT_MODE: FULLTEXT_MODES,
+	SORT_ORDER: SORT_ORDERS
 };
