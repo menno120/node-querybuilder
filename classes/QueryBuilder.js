@@ -15,6 +15,9 @@ const SORT_ORDERS = {
 	ASC: 1,
 	DESC: 2
 };
+const VARS = {
+	CURRENT_TIMESTAMP: 1
+};
 
 /**
  * References an another table
