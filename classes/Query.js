@@ -13,7 +13,7 @@ const _DatabaseConnection = new DatabaseConnection();
  */
 var Query = function(debug = false) {
 	this.debug = debug;
-	this.builder = new QueryBuilder();
+	this.builder = new QueryBuilder(debug);
 };
 
 /**
@@ -272,7 +272,7 @@ Query.prototype.andWhereBetween = function(key, min, max) {
  * @param  {string} 	table    			The table you want to join
  * @param  {string} 	key      			The key to compare
  * @param  {string} 	value    			The value to compare the key to
- * @param  {string} 	[operator = '=']	Check operator
+ * @param  {string} 	[operator='=']		Check operator
  *
  * @return {object} - Current instance of the QueryBuilder
  */
@@ -287,7 +287,7 @@ Query.prototype.leftJoin = function(table, key, value, operator = "=") {
  * @param  {string} 	table    			The table you want to join
  * @param  {string} 	key      			The key to compare
  * @param  {string} 	value    			The value to compare the key to
- * @param  {string} 	[operator = '=']	Check operator
+ * @param  {string} 	[operator='=']		Check operator
  *
  * @return {object} - Current instance of the QueryBuilder
  */
@@ -302,7 +302,7 @@ Query.prototype.rightJoin = function(table, key, value, operator = "=") {
  * @param  {string} 	table    			The table you want to join
  * @param  {string} 	key      			The key to compare
  * @param  {string} 	value    			The value to compare the key to
- * @param  {string} 	[operator = '=']	Check operator
+ * @param  {string} 	[operator='=']		Check operator
  *
  * @return {object} - Current instance of the QueryBuilder
  */
@@ -379,8 +379,10 @@ Query.prototype.prepare = function() {
  * @returns {Promise} - Promise containing the results
  */
 Query.prototype.execute = function() {
+	let builder = this.builder;
+
 	return new Promise(function(resolve, reject) {
-		dbConnection.get().query(this.builder.query, (err, data) => {
+		_DatabaseConnection.get().query(builder.query, (err, data) => {
 			if (err === null) {
 				resolve(data);
 			} else {
@@ -405,7 +407,7 @@ Query.prototype.execute = function() {
  */
 Query.prototype.go = function() {
 	this.builder = this.builder.prepare();
-	return this.builder.execute();
+	return this.execute();
 };
 
 module.exports = {
