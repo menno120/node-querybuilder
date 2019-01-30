@@ -766,7 +766,11 @@ QueryBuilder.prototype.prepare = function() {
 					" " +
 					clause.operator +
 					" " +
-					(typeof clause.value === "string" ? "'" + clause.value + "'" : clause.value)
+					(typeof joinClause.value === "object" && joinClause.value.type === "reference"
+						? "`" + joinClause.value.table + "`.`" + joinClause.value.key + "`"
+						: typeof clause.value === "string"
+						? "'" + clause.value + "'"
+						: clause.value)
 				);
 			}
 		});
