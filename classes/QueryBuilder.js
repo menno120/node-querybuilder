@@ -41,6 +41,7 @@ const reference = (tablename, key) => {
 var QueryBuilder = function(debug = false) {
 	this.query = "";
 	this.builder = {
+		_type: "query",
 		table: null,
 		type: null,
 		keys: [],
@@ -344,7 +345,7 @@ QueryBuilder.prototype.where = function(key, value, operator = "=", type = null)
 	const validation = Joi.validate(
 		{ key, value, operator, type },
 		Joi.object().keys({
-			key: Joi.string().required(),
+			key: Joi.any().required(),
 			value: Joi.any().required(),
 			operator: Joi.any()
 				.valid(operators.comparison)
@@ -756,15 +757,23 @@ QueryBuilder.prototype.prepare = function() {
 		where += "(";
 
 		let tmp = clauses.map((clause, i) => {
+			let tmp = null;
+
+			if (typeof clause === "object") {
+				tmp = clause.key.builder;
+			}
+
 			if (clause.operator === "MATCH") {
 				return "MATCH (" + clause.key + ") AGAINST '" + clause.value + "' " + clause.mode;
 			} else {
 				return (
-					this.escape(clause.key) +
+					(typeof clause === "object" && this.isQuery(clause.key)
+						? "(" + clause.key.builder.prepare().query + ")"
+						: this.escape(clause.key)) +
 					" " +
 					clause.operator +
 					" " +
-					(typeof clause.value === "object" && clause.value.type === "reference"
+					(typeof clause.value === "object" && this.isReference(clause.value)
 						? "`" + clause.value.table + "`.`" + clause.value.key + "`"
 						: typeof clause.value === "string"
 						? "'" + clause.value + "'"
@@ -897,6 +906,44 @@ QueryBuilder.prototype.escape = function(key) {
 		console.log(key);
 		throw new Error(e);
 	}
+};
+
+/**
+ * Checks if the given obj is a instance of QueryBuilder
+ *
+ * @todo WIP
+ *
+ * @param  {any} obj - Data to check if it is a QueryBuilder object
+ *
+ * @return {boolean} - Returns true if it is a QueryBuilder object, otherwise false
+ */
+QueryBuilder.prototype.isQuery = function(obj) {
+	if (this._debug) {
+		console.log("IS QUERY INPUT:", Object.keys(obj));
+	}
+
+	if (typeof obj == "object") {
+		if (typeof obj.builder !== "undefined") {
+			if (typeof obj.builder.builder !== "undefined") {
+				if (obj.builder.builder._type === "query") {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+};
+
+/**
+ * Checks if the given data is a refence
+ *
+ * @todo WIP
+ */
+QueryBuilder.prototype.isReference = function(obj) {
+	if (obj.type === "reference") {
+		return true;
+	}
+	return false;
 };
 
 /**

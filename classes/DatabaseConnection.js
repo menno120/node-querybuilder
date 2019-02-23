@@ -52,7 +52,8 @@ DatabaseConnection.prototype.connect = function(host, user, password, database) 
 		host: host,
 		user: user,
 		password: password,
-		database: database
+		database: database,
+		charset: "utf8mb4"
 	});
 
 	this.connection.connect(error => {
