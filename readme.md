@@ -1,49 +1,20 @@
-# Node.js QueryBuilder for MySQL database
+# Introduction 
+TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
 
-Simple to use QueryBuilder
+# Getting Started
+TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
+1.	Installation process
+2.	Software dependencies
+3.	Latest releases
+4.	API references
 
-## Instalation:
+# Build and Test
+TODO: Describe and show how to build your code and run the tests. 
 
-```
-> npm install git+https://github.com/menno120/node-querybuilder.git
-```
+# Contribute
+TODO: Explain how other users and developers can contribute to make your code better. 
 
-## Examples:
-
-**SELECT Statement**
-
-```js
-new QueryBuilder()
-	.select("users", ["id", "username", "email"])
-	.where("id", 1)
-	.andWhere("email", "user@example.com")
-	.orWhere("ud", 2)
-	.andWhere("email", "user2@example.com")
-	.limit(0, 25)
-	.orderBy("id", "ASC")
-	.orderBy("email", "DESC")
-	.prepare()
-	.execute((error, result) => {
-		if (error !== null) {
-			// Error handling code here ...
-		} else {
-			// Results ...
-		}
-	});
-```
-
-**COUNT Statement**
-
-```js
-new QueryBuilder()
-	.count("users", "id")
-	.where("username", "John Doe")
-	.prepare()
-	.execute((error, result) => {
-		if (error !== null) {
-			// Error handling code here ...
-		} else {
-			// Results ...
-		}
-	});
-```
+If you want to learn more about creating good readme files then refer the following [guidelines](https://www.visualstudio.com/en-us/docs/git/create-a-readme). You can also seek inspiration from the below readme files:
+- [ASP.NET Core](https://github.com/aspnet/Home)
+- [Visual Studio Code](https://github.com/Microsoft/vscode)
+- [Chakra Core](https://github.com/Microsoft/ChakraCore)
