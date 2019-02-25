@@ -1,9 +1,9 @@
 class Reference {
-	readonly tablename: string;
+	readonly table: string;
 	readonly key: string;
 
-	constructor(tablename: string, key: string) {
-		this.tablename = tablename;
+	constructor(table: string, key: string) {
+		this.table = table;
 		this.key = key;
 	}
 }

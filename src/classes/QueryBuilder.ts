@@ -13,6 +13,7 @@ import {
 	reference,
 	SortOrder
 } from "../helpers";
+import IQueryBuilder from "../interfaces/IQueryBuilder";
 
 export enum QueryType {
 	select,
@@ -29,9 +30,20 @@ export enum SelectFunction {
 }
 
 class QueryBuilder {
-	readonly debugging: boolean; // Debug mode
+	private debugging: boolean; // Debug mode
+	private builder: IQueryBuilder = {
+		type: null,
+		table: "",
+		keys: [],
+		values: [],
+		where: [],
+		order: [],
+		joins: [],
+		limit: null
+	};
+	private query: string = null; // The actual created query, set after prepare() is called
 
-	private builder: {
+	/* {
 		type: QueryType; // Type of query (select,insert,update,delete,truncate)
 		table: string; // Table name to select from
 		keys: string[]; // Keys to select
@@ -42,7 +54,7 @@ class QueryBuilder {
 		limit: Limit; // Limit
 
 		_query: string; // The actual created query, set after prepare() is called
-	};
+	}; */
 
 	/**
 	 * QueryBuilder constructor
@@ -53,6 +65,14 @@ class QueryBuilder {
 	 */
 	constructor(debug = false) {
 		this.debugging = debug;
+
+		// Set default values
+		this.builder.table = "";
+		this.builder.keys = [];
+		this.builder.values = [];
+		this.builder.where = [];
+		this.builder.order = [];
+		this.builder.joins = [];
 	}
 
 	/**
@@ -78,12 +98,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	selectFunc(
-		tableName: string,
-		key: string,
-		value: string,
-		func: SelectFunction
-	) {
+	selectFunc(tableName: string, key: string, value: string, func: SelectFunction) {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.select;
 
@@ -169,15 +184,8 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	where(
-		key: Reference,
-		value: string,
-		comparisonOperator: string,
-		type: WhereType
-	) {
-		this.builder.where.push(
-			new Where(key, value, comparisonOperator, type)
-		);
+	where(key: Reference, value: string, comparisonOperator: string, type: WhereType) {
+		this.builder.where.push(new Where(key, value, comparisonOperator, type));
 		return this;
 	}
 
@@ -193,9 +201,7 @@ class QueryBuilder {
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
 	whereBetween(key: Reference, min: number, max: number, type: WhereType) {
-		this.builder.where.push(
-			new Where(key, null, ComparisonFunctions.Between, type)
-		);
+		this.builder.where.push(new Where(key, null, ComparisonFunctions.Between, type));
 		return this;
 	}
 
@@ -209,15 +215,8 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	whereFulltext(
-		key: Reference,
-		value: string,
-		mode: FulltextMode,
-		type: WhereType
-	) {
-		this.builder.where.push(
-			new Where(key, value, ComparisonFunctions.Fulltext, type)
-		);
+	whereFulltext(key: Reference, value: string, mode: FulltextMode, type: WhereType) {
+		this.builder.where.push(new Where(key, value, ComparisonFunctions.Fulltext, type));
 		return this;
 	}
 
@@ -269,30 +268,45 @@ class QueryBuilder {
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
 	prepare() {
-		let query = "";
+		let _query = "";
 
 		switch (this.builder.type) {
 			case QueryType.select:
+				_query = "SELECT " + this.builder.keys.join(",") + " FROM " + this.builder.table;
 				break;
 			case QueryType.insert:
+				_query =
+					"INSERT INTO " +
+					this.builder.table +
+					" (" +
+					this.builder.keys.join(",") +
+					") VALUES (" +
+					this.builder.values.join(",") +
+					")";
 				break;
 			case QueryType.update:
+				_query = "UPDATE " + this.builder.table + " SET ";
 				break;
 			case QueryType.delete:
+				_query = "DELETE " + this.builder.table;
 				break;
 			case QueryType.truncate:
+				_query = "TRUNCATE " + this.builder.table;
 				break;
 			default:
 				return this.error("Unknown query type");
 		}
 
-		this.builder._query = [
-			query,
+		this.query = [
+			_query,
 			this.createJoinStatements(),
 			this.createWhereStatements(),
 			this.createOrderStatements(),
 			this.createLimitStatements()
-		].join(" ");
+		]
+			.join(" ")
+			.replace(/ +(?= )/g, "")
+			.trim();
 
 		return this;
 	}
@@ -345,7 +359,11 @@ class QueryBuilder {
 	}
 
 	get() {
-		return this.builder;
+		return {
+			debugging: this.debugging,
+			builder: this.builder,
+			query: this.query
+		};
 	}
 
 	private error(error: any) {
