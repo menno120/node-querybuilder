@@ -1,7 +1,7 @@
 const path = require("path");
+const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CleanWebpackPlugin = require("clean-webpack-plugin");
-const webpack = require("webpack");
 
 module.exports = {
 	mode: "development",
@@ -18,7 +18,7 @@ module.exports = {
 	},
 	watch: true,
 	watchOptions: {
-		ignored: /node_modules/
+		ignored: ["/node_modules/", "/dist/"]
 	},
 	plugins: [
 		new CleanWebpackPlugin(["dist"]),
@@ -31,7 +31,7 @@ module.exports = {
 			{
 				test: /\.tsx?$/,
 				use: "ts-loader",
-				exclude: /node_modules/
+				exclude: ["/node_modules/", "/dist/"]
 			}
 		]
 	},

@@ -24,4 +24,5 @@ typings/
 # Optional npm cache directory
 .npm
 
+# Build directory
 dist/

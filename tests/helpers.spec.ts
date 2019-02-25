@@ -1,4 +1,4 @@
-import "mocha";
+import 'mocha';
 import { expect } from "chai";
 import { uuid } from "../src/helpers";
 

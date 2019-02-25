@@ -30,7 +30,8 @@ export enum SelectFunction {
 
 class QueryBuilder {
 	readonly debugging: boolean; // Debug mode
-	readonly builder: {
+
+	private builder: {
 		type: QueryType; // Type of query (select,insert,update,delete,truncate)
 		table: string; // Table name to select from
 		keys: string[]; // Keys to select
@@ -77,7 +78,12 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	selectFunc(tableName: string, key: string, value: string, func: SelectFunction) {
+	selectFunc(
+		tableName: string,
+		key: string,
+		value: string,
+		func: SelectFunction
+	) {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.select;
 
@@ -163,8 +169,15 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	where(key: Reference, value: string, comparisonOperator: string, type: WhereType) {
-		this.builder.where.push(new Where(key, value, comparisonOperator, type));
+	where(
+		key: Reference,
+		value: string,
+		comparisonOperator: string,
+		type: WhereType
+	) {
+		this.builder.where.push(
+			new Where(key, value, comparisonOperator, type)
+		);
 		return this;
 	}
 
@@ -180,7 +193,9 @@ class QueryBuilder {
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
 	whereBetween(key: Reference, min: number, max: number, type: WhereType) {
-		this.builder.where.push(new Where(key, null, ComparisonFunctions.Between, type));
+		this.builder.where.push(
+			new Where(key, null, ComparisonFunctions.Between, type)
+		);
 		return this;
 	}
 
@@ -194,8 +209,15 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	whereFulltext(key: Reference, value: string, mode: FulltextMode, type: WhereType) {
-		this.builder.where.push(new Where(key, value, ComparisonFunctions.Fulltext, type));
+	whereFulltext(
+		key: Reference,
+		value: string,
+		mode: FulltextMode,
+		type: WhereType
+	) {
+		this.builder.where.push(
+			new Where(key, value, ComparisonFunctions.Fulltext, type)
+		);
 		return this;
 	}
 
@@ -320,6 +342,10 @@ class QueryBuilder {
 		statement = statement + this.builder.limit.amount;
 
 		return statement;
+	}
+
+	get() {
+		return this.builder;
 	}
 
 	private error(error: any) {
