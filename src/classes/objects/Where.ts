@@ -1,7 +1,8 @@
 import Reference from "./Reference";
 import { WhereType, ComparisonFunctions, ComparisonOperators } from "../../helpers";
+import IWhere from "../../interfaces/IWhere";
 
-class Where {
+class Where implements IWhere {
 	readonly key: Reference;
 	readonly value: string;
 	readonly operator: string | ComparisonFunctions | ComparisonOperators;

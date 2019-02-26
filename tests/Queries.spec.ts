@@ -8,4 +8,11 @@ describe("QueryBuilder", () => {
 	beforeEach(function() {
 		querybuilder = new QueryBuilder();
 	});
+
+	describe("Select statement", () => {
+		it("should return a valid SQL statement", () => {
+			querybuilder.select("tablename", ["id"], []).prepare();
+			expect(querybuilder.get().query).to.equal("SELECT id FROM tablename");
+		});
+	});
 });

@@ -25,36 +25,46 @@ describe("QueryBuilder", () => {
 
 	describe("select", () => {
 		it("type should be select", () => {
-			let query = new QueryBuilder().select("tablename", ["id"], []);
-			expect(query.get().builder.type).to.equal(QueryType.select);
+			querybuilder.select("tablename", ["id"], []);
+
+			expect(querybuilder.get().builder.type).to.equal(QueryType.select);
+			expect(querybuilder.get().builder.table).to.equal("tablename");
 		});
 	});
 
 	describe("insert", () => {
 		it("type should be insert", () => {
-			let query = new QueryBuilder().insert("tablename", ["id"], []);
-			expect(query.get().builder.type).to.equal(QueryType.insert);
+			querybuilder.insert("tablename", ["id"], []);
+
+			expect(querybuilder.get().builder.type).to.equal(QueryType.insert);
+			expect(querybuilder.get().builder.table).to.equal("tablename");
 		});
 	});
 
 	describe("update", () => {
 		it("type should be update", () => {
-			let query = new QueryBuilder().update("tablename", ["id"], []);
-			expect(query.get().builder.type).to.equal(QueryType.update);
+			querybuilder.update("tablename", ["id"], []);
+
+			expect(querybuilder.get().builder.type).to.equal(QueryType.update);
+			expect(querybuilder.get().builder.table).to.equal("tablename");
 		});
 	});
 
 	describe("delete", () => {
 		it("type should be delete", () => {
-			let query = new QueryBuilder().delete("tablename");
-			expect(query.get().builder.type).to.equal(QueryType.delete);
+			querybuilder.delete("tablename");
+
+			expect(querybuilder.get().builder.type).to.equal(QueryType.delete);
+			expect(querybuilder.get().builder.table).to.equal("tablename");
 		});
 	});
 
 	describe("truncate", () => {
 		it("type should be truncate", () => {
-			let query = new QueryBuilder().truncate("tablename");
-			expect(query.get().builder.type).to.equal(QueryType.truncate);
+			querybuilder.truncate("tablename");
+
+			expect(querybuilder.get().builder.type).to.equal(QueryType.truncate);
+			expect(querybuilder.get().builder.table).to.equal("tablename");
 		});
 	});
 });

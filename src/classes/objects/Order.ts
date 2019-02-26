@@ -1,12 +1,14 @@
 import Reference from "./Reference";
 import { SortOrder } from "../../helpers";
+import IOrder from "../../interfaces/IOrder";
 
-class Order {
+class Order implements IOrder {
 	keys: Reference[];
-	order: SortOrder;
+	order: SortOrder[];
 
-	constructor(keys: Reference | Reference[], order: SortOrder) {
+	constructor(keys: Reference | Reference[], order: SortOrder | SortOrder[]) {
 		let _keys: Reference[];
+		let _order: SortOrder[];
 
 		if (Array.isArray(keys)) {
 			_keys = keys;
@@ -17,9 +19,14 @@ class Order {
 				throw new Error('Expected "Reference" object!');
 			}
 		}
+		if (Array.isArray(order)) {
+			_order = order;
+		} else {
+			_order.push(order);
+		}
 
 		this.keys = _keys;
-		this.order = order;
+		this.order = _order;
 	}
 }
 

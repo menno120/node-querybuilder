@@ -1,4 +1,6 @@
-class Limit {
+import ILimit from "../../interfaces/ILimit";
+
+class Limit implements ILimit {
 	readonly offset: number;
 	readonly amount: number;
 
