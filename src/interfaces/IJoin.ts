@@ -4,7 +4,7 @@ import IReference from "./IReference";
 interface IJoin {
 	pos: JoinType;
 	table: IReference;
-	join: ReferIReferenceence;
+	join: IReference;
 	operator: string;
 }
 
