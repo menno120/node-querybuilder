@@ -14,6 +14,9 @@ import {
 	SortOrder
 } from "../helpers";
 import IQueryBuilder from "../interfaces/IQueryBuilder";
+import IReference from "../interfaces/IReference";
+import { read } from "fs";
+import IKey from "../interfaces/IKey";
 
 export enum QueryType {
 	select,
@@ -84,7 +87,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	select(tableName: string, keys: string[], values: string[]) {
+	select(tableName: string, keys: IKey[], values: string[]) {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.select;
 		this.builder.keys = keys;
@@ -98,9 +101,11 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	selectFunc(tableName: string, key: string, value: string, func: SelectFunction) {
+	selectFunc(tableName: string, key: IKey, value: string, func: SelectFunction) {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.select;
+
+		// @todo add keys and values
 
 		return this;
 	}
@@ -115,7 +120,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	insert(tableName: string, keys: string[], values: string[]) {
+	insert(tableName: string, keys: IKey[], values: string[]) {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.insert;
 
@@ -134,7 +139,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	update(tableName: string, keys: string[], values: string[]) {
+	update(tableName: string, keys: IKey[], values: string[]) {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.update;
 
@@ -272,27 +277,64 @@ class QueryBuilder {
 
 		switch (this.builder.type) {
 			case QueryType.select:
-				_query = "SELECT " + this.builder.keys.join(",") + " FROM " + this.builder.table;
+				_query =
+					"SELECT " +
+					this.builder.keys
+						.map((key) => {
+							return this.referenceToString(key.key) + (key.as !== null ? " AS " + key.as : "");
+						})
+						.join(",") +
+					" FROM " +
+					this.builder.table;
 				break;
+
 			case QueryType.insert:
 				_query =
 					"INSERT INTO " +
 					this.builder.table +
 					" (" +
-					this.builder.keys.join(",") +
+					this.builder.keys
+						.map((key) => {
+							if (key.func !== null) {
+								switch (key.func) {
+									case SelectFunction.AVG:
+										return "AVG(" + this.referenceToString(key.key) + ")";
+
+									case SelectFunction.SUM:
+										return "SUM(" + this.referenceToString(key.key) + ")";
+
+									case SelectFunction.COUNT:
+										return "COUNT(" + this.referenceToString(key.key) + ")";
+
+									case SelectFunction.FULLTEXT:
+										return "FULLTEXT(" + this.referenceToString(key.key) + ")";
+								}
+							} else {
+								return this.referenceToString(key.key);
+							}
+						})
+						.join(",") +
 					") VALUES (" +
 					this.builder.values.join(",") +
 					")";
 				break;
+
 			case QueryType.update:
-				_query = "UPDATE " + this.builder.table + " SET ";
+				let values = [];
+				for (let i = 0; i < this.builder.keys.length; i++) {
+					values.push(this.referenceToString(this.builder.keys[i].key) + "=" + this.builder.values[i]);
+				}
+				_query = "UPDATE " + this.builder.table + " SET " + values.join(",");
 				break;
+
 			case QueryType.delete:
 				_query = "DELETE " + this.builder.table;
 				break;
+
 			case QueryType.truncate:
 				_query = "TRUNCATE " + this.builder.table;
 				break;
+
 			default:
 				return this.error("Unknown query type");
 		}
@@ -334,12 +376,26 @@ class QueryBuilder {
 
 	private createOrderStatements() {
 		let _order = "";
+		let _orders: string[] = [];
 
 		if (this.debugging) {
 			this.debug(_order);
 		}
 
-		return _order;
+		if (this.builder.order.length > 0) {
+			_order = "ORDER BY";
+
+			this.builder.order.forEach((order, i) => {
+				if (order.keys.length !== order.order.length) {
+					throw new Error("Order keys and order are not the same length!");
+				}
+				for (let i = 0; i < order.keys.length; i++) {
+					_orders.push(this.referenceToString(order.keys[i]) + " " + order.order[i].toString());
+				}
+			});
+		}
+
+		return _order + _orders.join(",");
 	}
 
 	private createLimitStatements() {
@@ -374,6 +430,14 @@ class QueryBuilder {
 		console.groupCollapsed("QueryBuilder debugger");
 		console.log(data);
 		console.groupEnd();
+	}
+
+	private isReference(key: any) {
+		return key.constructor.name === "Reference";
+	}
+
+	private referenceToString(ref: IReference) {
+		return "`" + ref.table + "`.`" + ref.key + "`";
 	}
 }
 

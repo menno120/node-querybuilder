@@ -4,6 +4,7 @@ import QueryBuilder, { SelectFunction } from "./QueryBuilder";
 import { FulltextMode, SortOrder, WhereType, JoinType, reference } from "../helpers";
 
 import Reference from "./objects/Reference";
+import IKey from "../interfaces/IKey";
 
 class Query {
 	debug: boolean = false;
@@ -32,7 +33,13 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	select(table: string, keys: string[] = [], names: string[] = []) {
-		this.builder = this.builder.select(table, keys, names);
+		let tmpKeys: IKey[] = [];
+
+		keys.forEach((key, i) => {
+			tmpKeys.push({ key: reference(table, key), as: names.length > 0 ? names[i] : null });
+		});
+
+		this.builder = this.builder.select(table, tmpKeys, names);
 		return this;
 	}
 
@@ -46,7 +53,13 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	insert(table: string, keys: string[], values: string[] = []) {
-		this.builder = this.builder.insert(table, keys, values);
+		let tmpKeys: IKey[] = [];
+
+		keys.forEach((key) => {
+			tmpKeys.push({ key: reference(table, key) });
+		});
+
+		this.builder = this.builder.insert(table, tmpKeys, values);
 		return this;
 	}
 
@@ -60,7 +73,13 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	update(table: string, keys: string[], values: string[] = []) {
-		this.builder = this.builder.update(table, keys, values);
+		let tmpKeys: IKey[] = [];
+
+		keys.forEach((key) => {
+			tmpKeys.push({ key: reference(table, key) });
+		});
+
+		this.builder = this.builder.update(table, tmpKeys, values);
 		return this;
 	}
 
@@ -98,7 +117,12 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	count(table: string, key: string, keyName = "count") {
-		this.builder = this.builder.selectFunc(table, key, keyName, SelectFunction.COUNT);
+		this.builder = this.builder.selectFunc(
+			table,
+			{ key: reference(table, key), func: SelectFunction.COUNT, as: keyName },
+			keyName,
+			SelectFunction.COUNT
+		);
 		return this;
 	}
 
@@ -112,7 +136,12 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	avg(table: string, key: string, keyName = "avg") {
-		this.builder = this.builder.selectFunc(table, key, keyName, SelectFunction.AVG);
+		this.builder = this.builder.selectFunc(
+			table,
+			{ key: reference(table, key), func: SelectFunction.AVG, as: keyName },
+			keyName,
+			SelectFunction.AVG
+		);
 		return this;
 	}
 
@@ -127,7 +156,12 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	sum(table: string, sum: string, keyName = "sum") {
-		this.builder = this.builder.selectFunc(table, sum, keyName, SelectFunction.SUM);
+		this.builder = this.builder.selectFunc(
+			table,
+			{ key: reference(table, sum), func: SelectFunction.SUM, as: keyName },
+			keyName,
+			SelectFunction.SUM
+		);
 		return this;
 	}
 
@@ -429,7 +463,7 @@ class Query {
 		if (key instanceof Reference) {
 			ref = key;
 		} else {
-			ref = new Reference(this.builder.builder.table, key);
+			ref = new Reference(this.builder.get().builder.table, key);
 		}
 
 		return ref;
