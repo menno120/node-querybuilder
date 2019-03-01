@@ -1,6 +1,7 @@
 import "mocha";
 import { expect } from "chai";
 import QueryBuilder from "../src/classes/QueryBuilder";
+import Reference from "../src/classes/objects/Reference";
 
 describe("QueryBuilder", () => {
 	let querybuilder: QueryBuilder = new QueryBuilder();
@@ -11,7 +12,7 @@ describe("QueryBuilder", () => {
 
 	describe("Select statement", () => {
 		it("should return a valid SQL statement", () => {
-			querybuilder.select("tablename", ["id"], []).prepare();
+			querybuilder.select("tablename", [{ key: new Reference("tablename", "table") }], []).prepare();
 			expect(querybuilder.get().query).to.equal("SELECT id FROM tablename");
 		});
 	});

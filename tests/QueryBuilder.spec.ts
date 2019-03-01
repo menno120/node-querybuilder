@@ -25,7 +25,7 @@ describe("QueryBuilder", () => {
 
 	describe("select", () => {
 		it("type should be select", () => {
-			querybuilder.select("tablename", ["id"], []);
+			querybuilder.select("tablename", [{ key: { table: "tablename", key: "id" } }], []);
 
 			expect(querybuilder.get().builder.type).to.equal(QueryType.select);
 			expect(querybuilder.get().builder.table).to.equal("tablename");
@@ -34,7 +34,7 @@ describe("QueryBuilder", () => {
 
 	describe("insert", () => {
 		it("type should be insert", () => {
-			querybuilder.insert("tablename", ["id"], []);
+			querybuilder.insert("tablename", [{ key: { table: "tablename", key: "id" } }], []);
 
 			expect(querybuilder.get().builder.type).to.equal(QueryType.insert);
 			expect(querybuilder.get().builder.table).to.equal("tablename");
@@ -43,7 +43,7 @@ describe("QueryBuilder", () => {
 
 	describe("update", () => {
 		it("type should be update", () => {
-			querybuilder.update("tablename", ["id"], []);
+			querybuilder.update("tablename", [{ key: { table: "tablename", key: "id" } }], []);
 
 			expect(querybuilder.get().builder.type).to.equal(QueryType.update);
 			expect(querybuilder.get().builder.table).to.equal("tablename");
