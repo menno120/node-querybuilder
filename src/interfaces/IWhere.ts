@@ -1,5 +1,5 @@
-import IReference from "./IReference";
-import { ComparisonOperators, ComparisonFunctions, WhereType } from "../helpers";
+import IReference from './IReference';
+import { ComparisonOperators, ComparisonFunctions, WhereType } from '../helpers';
 
 interface IWhere {
 	key: IReference;

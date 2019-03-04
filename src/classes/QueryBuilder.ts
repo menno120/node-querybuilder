@@ -1,8 +1,8 @@
-import Join from "./objects/Join";
-import Where from "./objects/Where";
-import Order from "./objects/Order";
-import Limit from "./objects/Limit";
-import Reference from "./objects/Reference";
+import Join from './objects/Join';
+import Where from './objects/Where';
+import Order from './objects/Order';
+import Limit from './objects/Limit';
+import Reference from './objects/Reference';
 import {
 	JoinType,
 	WhereType,
@@ -12,11 +12,11 @@ import {
 	ComparisonFunctions,
 	reference,
 	SortOrder
-} from "../helpers";
-import IQueryBuilder from "../interfaces/IQueryBuilder";
-import IReference from "../interfaces/IReference";
-import { read } from "fs";
-import IKey from "../interfaces/IKey";
+} from '../helpers';
+import IQueryBuilder from '../interfaces/IQueryBuilder';
+import IReference from '../interfaces/IReference';
+import { read } from 'fs';
+import IKey from '../interfaces/IKey';
 
 export enum QueryType {
 	select,
@@ -36,7 +36,7 @@ class QueryBuilder {
 	private debugging: boolean; // Debug mode
 	private builder: IQueryBuilder = {
 		type: null,
-		table: "",
+		table: '',
 		keys: [],
 		values: [],
 		where: [],
@@ -70,7 +70,7 @@ class QueryBuilder {
 		this.debugging = debug;
 
 		// Set default values
-		this.builder.table = "";
+		this.builder.table = '';
 		this.builder.keys = [];
 		this.builder.values = [];
 		this.builder.where = [];
@@ -273,70 +273,70 @@ class QueryBuilder {
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
 	prepare() {
-		let _query = "";
+		let _query = '';
 
 		switch (this.builder.type) {
 			case QueryType.select:
 				_query =
-					"SELECT " +
+					'SELECT ' +
 					this.builder.keys
 						.map((key) => {
-							return this.referenceToString(key.key) + (key.as !== null ? " AS " + key.as : "");
+							return this.referenceToString(key.key) + (key.as !== null ? ' AS ' + key.as : '');
 						})
-						.join(",") +
-					" FROM " +
+						.join(',') +
+					' FROM ' +
 					this.builder.table;
 				break;
 
 			case QueryType.insert:
 				_query =
-					"INSERT INTO " +
+					'INSERT INTO ' +
 					this.builder.table +
-					" (" +
+					' (' +
 					this.builder.keys
 						.map((key) => {
 							if (key.func !== null) {
 								switch (key.func) {
 									case SelectFunction.AVG:
-										return "AVG(" + this.referenceToString(key.key) + ")";
+										return 'AVG(' + this.referenceToString(key.key) + ')';
 
 									case SelectFunction.SUM:
-										return "SUM(" + this.referenceToString(key.key) + ")";
+										return 'SUM(' + this.referenceToString(key.key) + ')';
 
 									case SelectFunction.COUNT:
-										return "COUNT(" + this.referenceToString(key.key) + ")";
+										return 'COUNT(' + this.referenceToString(key.key) + ')';
 
 									case SelectFunction.FULLTEXT:
-										return "FULLTEXT(" + this.referenceToString(key.key) + ")";
+										return 'FULLTEXT(' + this.referenceToString(key.key) + ')';
 								}
 							} else {
 								return this.referenceToString(key.key);
 							}
 						})
-						.join(",") +
-					") VALUES (" +
-					this.builder.values.join(",") +
-					")";
+						.join(',') +
+					') VALUES (' +
+					this.builder.values.join(',') +
+					')';
 				break;
 
 			case QueryType.update:
 				let values = [];
 				for (let i = 0; i < this.builder.keys.length; i++) {
-					values.push(this.referenceToString(this.builder.keys[i].key) + "=" + this.builder.values[i]);
+					values.push(this.referenceToString(this.builder.keys[i].key) + '=' + this.builder.values[i]);
 				}
-				_query = "UPDATE " + this.builder.table + " SET " + values.join(",");
+				_query = 'UPDATE ' + this.builder.table + ' SET ' + values.join(',');
 				break;
 
 			case QueryType.delete:
-				_query = "DELETE " + this.builder.table;
+				_query = 'DELETE ' + this.builder.table;
 				break;
 
 			case QueryType.truncate:
-				_query = "TRUNCATE " + this.builder.table;
+				_query = 'TRUNCATE ' + this.builder.table;
 				break;
 
 			default:
-				return this.error("Unknown query type");
+				return this.error('Unknown query type');
 		}
 
 		this.query = [
@@ -346,8 +346,8 @@ class QueryBuilder {
 			this.createOrderStatements(),
 			this.createLimitStatements()
 		]
-			.join(" ")
-			.replace(/ +(?= )/g, "")
+			.join(' ')
+			.replace(/ +(?= )/g, '')
 			.trim();
 
 		return this;
@@ -355,7 +355,7 @@ class QueryBuilder {
 	execute() {}
 
 	private createWhereStatements() {
-		let _where = "";
+		let _where = '';
 
 		if (this.debugging) {
 			this.debug(_where);
@@ -365,7 +365,7 @@ class QueryBuilder {
 	}
 
 	private createJoinStatements() {
-		let _join = "";
+		let _join = '';
 
 		if (this.debugging) {
 			this.debug(_join);
@@ -375,7 +375,7 @@ class QueryBuilder {
 	}
 
 	private createOrderStatements() {
-		let _order = "";
+		let _order = '';
 		let _orders: string[] = [];
 
 		if (this.debugging) {
@@ -383,30 +383,30 @@ class QueryBuilder {
 		}
 
 		if (this.builder.order.length > 0) {
-			_order = "ORDER BY";
+			_order = 'ORDER BY';
 
 			this.builder.order.forEach((order, i) => {
 				if (order.keys.length !== order.order.length) {
-					throw new Error("Order keys and order are not the same length!");
+					throw new Error('Order keys and order are not the same length!');
 				}
 				for (let i = 0; i < order.keys.length; i++) {
-					_orders.push(this.referenceToString(order.keys[i]) + " " + order.order[i].toString());
+					_orders.push(this.referenceToString(order.keys[i]) + ' ' + order.order[i].toString());
 				}
 			});
 		}
 
-		return _order + _orders.join(",");
+		return _order + _orders.join(',');
 	}
 
 	private createLimitStatements() {
 		if (this.builder.limit === null) {
-			return "";
+			return '';
 		}
 
-		let statement = "LIMIT ";
+		let statement = 'LIMIT ';
 
 		if (this.builder.limit.offset !== null) {
-			statement = statement + this.builder.limit.offset + ",";
+			statement = statement + this.builder.limit.offset + ',';
 		}
 
 		statement = statement + this.builder.limit.amount;
@@ -427,17 +427,17 @@ class QueryBuilder {
 		throw new Error();
 	}
 	private debug(data: any) {
-		console.groupCollapsed("QueryBuilder debugger");
+		console.groupCollapsed('QueryBuilder debugger');
 		console.log(data);
 		console.groupEnd();
 	}
 
 	private isReference(key: any) {
-		return key.constructor.name === "Reference";
+		return key.constructor.name === 'Reference';
 	}
 
 	private referenceToString(ref: IReference) {
-		return "`" + ref.table + "`.`" + ref.key + "`";
+		return '`' + ref.table + '`.`' + ref.key + '`';
 	}
 }
 

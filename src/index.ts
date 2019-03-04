@@ -1,3 +1,3 @@
-import Query from "./classes/Query";
+import Query from './classes/Query';
 
 export default Query;

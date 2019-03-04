@@ -1,9 +1,9 @@
-import { QueryType } from "../classes/QueryBuilder";
-import Where from "../classes/objects/Where";
-import Order from "../classes/objects/Order";
-import Join from "../classes/objects/Join";
-import Limit from "../classes/objects/Limit";
-import IKey from "./IKey";
+import { QueryType } from '../classes/QueryBuilder';
+import Where from '../classes/objects/Where';
+import Order from '../classes/objects/Order';
+import Join from '../classes/objects/Join';
+import Limit from '../classes/objects/Limit';
+import IKey from './IKey';
 
 interface IQueryBuilder {
 	type: QueryType; // Type of query (select,insert,update,delete,truncate)

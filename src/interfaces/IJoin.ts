@@ -1,5 +1,5 @@
-import { JoinType } from "../helpers";
-import IReference from "./IReference";
+import { JoinType } from '../helpers';
+import IReference from './IReference';
 
 interface IJoin {
 	pos: JoinType;

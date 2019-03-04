@@ -1,5 +1,5 @@
-import IReference from "./IReference";
-import { SortOrder } from "../helpers";
+import IReference from './IReference';
+import { SortOrder } from '../helpers';
 
 interface IOrder {
 	keys: IReference[];

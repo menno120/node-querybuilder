@@ -1,4 +1,4 @@
-const mysql = require("../../node_modules/mysql");
+const mysql = require('../../node_modules/mysql');
 
 class DatabaseConnection {
 	connection: any = null;
@@ -15,16 +15,16 @@ class DatabaseConnection {
 	 */
 	connect = function(host: string, user: string, password: string, database: string) {
 		if (host === null) {
-			throw new Error("Host cannot be NULL");
+			throw new Error('Host cannot be NULL');
 		}
 		if (user === null) {
-			throw new Error("User cannot be NULL");
+			throw new Error('User cannot be NULL');
 		}
 		if (password === null) {
-			throw new Error("Password cannot be NULL");
+			throw new Error('Password cannot be NULL');
 		}
 		if (database === null) {
-			throw new Error("Database cannot be NULL");
+			throw new Error('Database cannot be NULL');
 		}
 
 		this.connection = mysql.createConnection({
@@ -32,14 +32,14 @@ class DatabaseConnection {
 			user: user,
 			password: password,
 			database: database,
-			charset: "utf8mb4"
+			charset: 'utf8mb4'
 		});
 
 		this.connection.connect((error: any) => {
 			if (error !== null) {
 				throw error;
 			} else {
-				console.info("Database connected!");
+				console.info('Database connected!');
 			}
 		});
 	};

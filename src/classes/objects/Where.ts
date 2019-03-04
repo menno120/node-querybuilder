@@ -1,6 +1,6 @@
-import Reference from "./Reference";
-import { WhereType, ComparisonFunctions, ComparisonOperators } from "../../helpers";
-import IWhere from "../../interfaces/IWhere";
+import Reference from './Reference';
+import { WhereType, ComparisonFunctions, ComparisonOperators } from '../../helpers';
+import IWhere from '../../interfaces/IWhere';
 
 class Where implements IWhere {
 	readonly key: Reference;

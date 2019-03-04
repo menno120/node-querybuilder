@@ -1,5 +1,5 @@
-import IReference from "./IReference";
-import { SelectFunction } from "../classes/QueryBuilder";
+import IReference from './IReference';
+import { SelectFunction } from '../classes/QueryBuilder';
 
 interface IKey {
 	key: IReference;

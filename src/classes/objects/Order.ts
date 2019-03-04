@@ -1,6 +1,6 @@
-import Reference from "./Reference";
-import { SortOrder } from "../../helpers";
-import IOrder from "../../interfaces/IOrder";
+import Reference from './Reference';
+import { SortOrder } from '../../helpers';
+import IOrder from '../../interfaces/IOrder';
 
 class Order implements IOrder {
 	keys: Reference[];

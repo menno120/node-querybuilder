@@ -1,10 +1,10 @@
-import DatabaseConnection from "./DatabaseConnection";
-import QueryBuilder, { SelectFunction } from "./QueryBuilder";
+import DatabaseConnection from './DatabaseConnection';
+import QueryBuilder, { SelectFunction } from './QueryBuilder';
 
-import { FulltextMode, SortOrder, WhereType, JoinType, reference } from "../helpers";
+import { FulltextMode, SortOrder, WhereType, JoinType, reference } from '../helpers';
 
-import Reference from "./objects/Reference";
-import IKey from "../interfaces/IKey";
+import Reference from './objects/Reference';
+import IKey from '../interfaces/IKey';
 
 class Query {
 	debug: boolean = false;
@@ -116,7 +116,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	count(table: string, key: string, keyName = "count") {
+	count(table: string, key: string, keyName = 'count') {
 		this.builder = this.builder.selectFunc(
 			table,
 			{ key: reference(table, key), func: SelectFunction.COUNT, as: keyName },
@@ -135,7 +135,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	avg(table: string, key: string, keyName = "avg") {
+	avg(table: string, key: string, keyName = 'avg') {
 		this.builder = this.builder.selectFunc(
 			table,
 			{ key: reference(table, key), func: SelectFunction.AVG, as: keyName },
@@ -155,7 +155,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	sum(table: string, sum: string, keyName = "sum") {
+	sum(table: string, sum: string, keyName = 'sum') {
 		this.builder = this.builder.selectFunc(
 			table,
 			{ key: reference(table, sum), func: SelectFunction.SUM, as: keyName },
@@ -175,7 +175,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	fulltext(index: string, value: string, mode: FulltextMode, keyName = "score") {
+	fulltext(index: string, value: string, mode: FulltextMode, keyName = 'score') {
 		// @todo: this should use the selectFunc with SelectionFunction.Fulltext
 		// this.builder = this.builder.fulltext(index, value, mode, keyName);
 		return this;
@@ -190,7 +190,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	where(key: string | Reference, value: string, operator = "=") {
+	where(key: string | Reference, value: string, operator = '=') {
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.DEFAULT);
 		return this;
 	}
@@ -205,7 +205,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	orWhere(key: string | Reference, value: string, operator = "=") {
+	orWhere(key: string | Reference, value: string, operator = '=') {
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.OR);
 		return this;
 	}
@@ -220,7 +220,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	andWhere(key: string | Reference, value: string, operator = "=") {
+	andWhere(key: string | Reference, value: string, operator = '=') {
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.AND);
 		return this;
 	}
@@ -385,7 +385,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	subQuery(queryBuilder: QueryBuilder, keyName = "result") {
+	subQuery(queryBuilder: QueryBuilder, keyName = 'result') {
 		this.builder = this.builder.subQuery(queryBuilder, keyName);
 		return this;
 	}
@@ -421,7 +421,7 @@ class Query {
 		if (_builder instanceof QueryBuilder) {
 			this.builder = _builder;
 		} else {
-			throw new Error("Failed to prepare query");
+			throw new Error('Failed to prepare query');
 		}
 
 		return this;
@@ -434,7 +434,7 @@ class Query {
 	 */
 	execute() {
 		if (this.databaseConnection === null) {
-			throw new Error("You need to make a database connection first!");
+			throw new Error('You need to make a database connection first!');
 		}
 
 		return new Promise(function(resolve, reject) {
