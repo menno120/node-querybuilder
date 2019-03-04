@@ -10,7 +10,7 @@ module.exports = {
 	},
 	output: {
 		filename: "[name].js",
-		path: path.resolve(__dirname, "dist")
+		path: path.resolve(__dirname, "./dist")
 	},
 	devtool: "inline-source-map",
 	devServer: {
@@ -37,5 +37,10 @@ module.exports = {
 	},
 	resolve: {
 		extensions: [".tsx", ".ts", ".js"]
+	},
+	externals: {
+		chalk: "chalk",
+		joi: "joi",
+		mysql: "mysql"
 	}
 };
