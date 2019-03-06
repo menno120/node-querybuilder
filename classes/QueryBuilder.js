@@ -98,7 +98,7 @@ QueryBuilder.prototype.select = function(table, keys = [], names = []) {
 		console.log(_this);
 		return _this;
 	} else {
-		let tmp_keys = keys.map(key => {
+		let tmp_keys = keys.map((key) => {
 			if (!key.includes(".")) {
 				return table + "." + key;
 			} else {
@@ -628,7 +628,7 @@ QueryBuilder.prototype.prepare = function() {
 			sql =
 				"SELECT " +
 				this.builder.keys
-					.map(key => {
+					.map((key) => {
 						if (typeof key.type === "undefined" || key.type === "simple") {
 							return this.escape(key.key) + (key.as !== null ? " AS " + this.escape(key.as) : "");
 						} else if (key.type === "count") {
@@ -671,7 +671,7 @@ QueryBuilder.prototype.prepare = function() {
 				this.escape(this.builder.table) +
 				" (" +
 				this.builder.keys
-					.map(key => {
+					.map((key) => {
 						return this.escape(key);
 					})
 					.join(",") +
@@ -764,7 +764,7 @@ QueryBuilder.prototype.prepare = function() {
 			}
 
 			if (clause.operator === "MATCH") {
-				return "MATCH (" + clause.key + ") AGAINST '" + clause.value + "' " + clause.mode;
+				return "MATCH (" + clause.key + ') AGAINST ("' + clause.value + '" ' + clause.mode + ")";
 			} else {
 				return (
 					(typeof clause === "object" && this.isQuery(clause.key)
@@ -798,7 +798,7 @@ QueryBuilder.prototype.prepare = function() {
 	// Create order
 	if (this.builder.order.length > 0) {
 		order += "ORDER BY";
-		let tmp = this.builder.order.map(order => {
+		let tmp = this.builder.order.map((order) => {
 			if (order.type === "simple") {
 				return " " + this.escape(order.key) + " " + order.sortOrder;
 			} else {
