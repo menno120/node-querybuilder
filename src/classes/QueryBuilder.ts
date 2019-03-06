@@ -281,7 +281,10 @@ class QueryBuilder {
 					'SELECT ' +
 					this.builder.keys
 						.map((key) => {
-							return this.referenceToString(key.key) + (key.as !== null ? ' AS ' + key.as : '');
+							return (
+								this.referenceToString(key.key) +
+								(key.as !== undefined && key.as !== null ? ' AS ' + key.as : '')
+							);
 						})
 						.join(',') +
 					' FROM ' +

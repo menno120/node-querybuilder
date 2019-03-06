@@ -5,6 +5,7 @@ import { FulltextMode, SortOrder, WhereType, JoinType, reference } from '../help
 
 import Reference from '../models/Reference';
 import IKey from '../interfaces/IKey';
+import Key from '../models/Key';
 
 class Query {
 	debug: boolean = false;
@@ -32,18 +33,19 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	select(table: string, keys: string[] = [], names: string[] = []) {
+	select(table: string, keys: string[] = [], names: string[] = []): this {
 		let tmpKeys: IKey[] = [];
 
 		if (names.length !== 0 && keys.length !== names.length) {
-			throw new Error('names array should be equal length as the keys array');
+			throw new Error('Names array should be equal length as the keys array!');
 		}
 
 		keys.forEach((key, i) => {
-			tmpKeys.push({ key: reference(table, key), as: names.length > 0 ? names[i] : null });
+			tmpKeys.push(new Key(reference(table, key), names.length > 0 ? names[i] : null, null)); // { key: , as: , func:  });
 		});
 
 		this.builder = this.builder.select(table, tmpKeys, names);
+
 		return this;
 	}
 
@@ -56,7 +58,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	insert(table: string, keys: string[], values: string[] = []) {
+	insert(table: string, keys: string[], values: string[] = []): this {
 		let tmpKeys: IKey[] = [];
 
 		keys.forEach((key) => {
@@ -64,6 +66,7 @@ class Query {
 		});
 
 		this.builder = this.builder.insert(table, tmpKeys, values);
+
 		return this;
 	}
 
@@ -76,7 +79,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	update(table: string, keys: string[], values: string[] = []) {
+	update(table: string, keys: string[], values: string[] = []): this {
 		let tmpKeys: IKey[] = [];
 
 		keys.forEach((key) => {
@@ -84,6 +87,7 @@ class Query {
 		});
 
 		this.builder = this.builder.update(table, tmpKeys, values);
+
 		return this;
 	}
 
@@ -94,7 +98,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	delete(table: string) {
+	delete(table: string): this {
 		this.builder = this.builder.delete(table);
 		return this;
 	}
@@ -106,7 +110,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	truncate(table: string) {
+	truncate(table: string): this {
 		this.builder = this.builder.truncate(table);
 		return this;
 	}
@@ -120,13 +124,14 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	count(table: string, key: string, keyName = 'count') {
+	count(table: string, key: string, keyName = 'count'): this {
 		this.builder = this.builder.selectFunc(
 			table,
 			{ key: reference(table, key), func: SelectFunction.COUNT, as: keyName },
 			keyName,
 			SelectFunction.COUNT
 		);
+
 		return this;
 	}
 
@@ -139,13 +144,14 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	avg(table: string, key: string, keyName = 'avg') {
+	avg(table: string, key: string, keyName = 'avg'): this {
 		this.builder = this.builder.selectFunc(
 			table,
 			{ key: reference(table, key), func: SelectFunction.AVG, as: keyName },
 			keyName,
 			SelectFunction.AVG
 		);
+
 		return this;
 	}
 
@@ -159,13 +165,14 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	sum(table: string, sum: string, keyName = 'sum') {
+	sum(table: string, sum: string, keyName = 'sum'): this {
 		this.builder = this.builder.selectFunc(
 			table,
 			{ key: reference(table, sum), func: SelectFunction.SUM, as: keyName },
 			keyName,
 			SelectFunction.SUM
 		);
+
 		return this;
 	}
 
@@ -179,7 +186,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	fulltext(index: string, value: string, mode: FulltextMode, keyName = 'score') {
+	fulltext(index: string, value: string, mode: FulltextMode, keyName = 'score'): this {
 		// @todo: this should use the selectFunc with SelectionFunction.Fulltext
 		// this.builder = this.builder.fulltext(index, value, mode, keyName);
 		return this;
@@ -194,7 +201,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	where(key: string | Reference, value: string, operator = '=') {
+	where(key: string | Reference, value: string, operator = '='): this {
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.DEFAULT);
 		return this;
 	}
@@ -209,7 +216,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	orWhere(key: string | Reference, value: string, operator = '=') {
+	orWhere(key: string | Reference, value: string, operator = '='): this {
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.OR);
 		return this;
 	}
@@ -224,7 +231,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	andWhere(key: string | Reference, value: string, operator = '=') {
+	andWhere(key: string | Reference, value: string, operator = '='): this {
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.AND);
 		return this;
 	}
@@ -238,7 +245,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	whereFulltext(key: string | Reference, value: string, mode: FulltextMode) {
+	whereFulltext(key: string | Reference, value: string, mode: FulltextMode): this {
 		this.builder = this.builder.whereFulltext(this.convertKeyToReference(key), value, mode, WhereType.DEFAULT);
 		return this;
 	}
@@ -252,7 +259,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	orWhereFulltext(key: string | Reference, value: string, mode: FulltextMode) {
+	orWhereFulltext(key: string | Reference, value: string, mode: FulltextMode): this {
 		this.builder = this.builder.whereFulltext(this.convertKeyToReference(key), value, mode, WhereType.OR);
 		return this;
 	}
@@ -266,7 +273,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	andWhereFulltext(key: string | Reference, value: string, mode: FulltextMode) {
+	andWhereFulltext(key: string | Reference, value: string, mode: FulltextMode): this {
 		this.builder = this.builder.whereFulltext(this.convertKeyToReference(key), value, mode, WhereType.AND);
 		return this;
 	}
@@ -280,7 +287,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	whereBetween(key: string | Reference, min: number, max: number) {
+	whereBetween(key: string | Reference, min: number, max: number): this {
 		this.builder = this.builder.whereBetween(this.convertKeyToReference(key), min, max, WhereType.DEFAULT);
 		return this;
 	}
@@ -294,7 +301,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	orWhereBetween(key: string | Reference, min: number, max: number) {
+	orWhereBetween(key: string | Reference, min: number, max: number): this {
 		this.builder = this.builder.whereBetween(this.convertKeyToReference(key), min, max, WhereType.OR);
 		return this;
 	}
@@ -308,7 +315,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	andWhereBetween(key: string | Reference, min: number, max: number) {
+	andWhereBetween(key: string | Reference, min: number, max: number): this {
 		this.builder = this.builder.whereBetween(this.convertKeyToReference(key), min, max, WhereType.AND);
 		return this;
 	}
@@ -322,7 +329,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	leftJoin(table: string, key: string, value: string) {
+	leftJoin(table: string, key: string, value: string): this {
 		this.builder = this.builder.join(new Reference(table, key), this.convertKeyToReference(value), JoinType.Inner);
 		return this;
 	}
@@ -336,7 +343,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	rightJoin(table: string, key: string, value: string) {
+	rightJoin(table: string, key: string, value: string): this {
 		this.builder = this.builder.join(new Reference(table, key), this.convertKeyToReference(value), JoinType.Inner);
 		return this;
 	}
@@ -350,7 +357,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	innerJoin(table: string, key: string, value: string | Reference) {
+	innerJoin(table: string, key: string, value: string | Reference): this {
 		this.builder = this.builder.join(new Reference(table, key), this.convertKeyToReference(value), JoinType.Inner);
 		return this;
 	}
@@ -363,7 +370,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	limit(offset: number = 0, amount: number = 25) {
+	limit(offset: number = 0, amount: number = 25): this {
 		this.builder = this.builder.limit(offset, amount);
 		return this;
 	}
@@ -376,7 +383,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	orderBy(key: string | Reference, sortOrder: SortOrder = SortOrder.ASC) {
+	orderBy(key: string | Reference, sortOrder: SortOrder = SortOrder.ASC): this {
 		this.builder = this.builder.order(this.convertKeyToReference(key), sortOrder);
 		return this;
 	}
@@ -389,7 +396,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	subQuery(queryBuilder: QueryBuilder, keyName = 'result') {
+	subQuery(queryBuilder: QueryBuilder, keyName = 'result'): this {
 		this.builder = this.builder.subQuery(queryBuilder, keyName);
 		return this;
 	}
@@ -402,7 +409,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	raw(sql: string) {
+	raw(sql: string): Promise<Function> {
 		return new Promise(function(resolve, reject) {
 			this.databaseConnection.get().query(sql, (err: any, data: any) => {
 				if (err === null) {
@@ -419,7 +426,7 @@ class Query {
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	prepare() {
+	prepare(): this {
 		let _builder = this.builder.prepare();
 
 		if (_builder instanceof QueryBuilder) {
@@ -436,7 +443,7 @@ class Query {
 	 *
 	 * @returns {Promise} - Promise containing the results
 	 */
-	execute() {
+	execute(): Promise<Function> {
 		if (this.databaseConnection === null) {
 			throw new Error('You need to make a database connection first!');
 		}
@@ -457,7 +464,7 @@ class Query {
 	 *
 	 * @returns {Promise} - Promise containing the results
 	 */
-	go() {
+	go(): Promise<Function> {
 		return this.prepare().execute();
 	}
 

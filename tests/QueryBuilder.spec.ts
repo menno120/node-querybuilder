@@ -35,7 +35,6 @@ describe('QueryBuilder', () => {
 		it('type should be select', () => {
 			queryBuilder = queryBuilder.select('tablename', [{ key: { table: 'tablename', key: 'id' } }], []);
 
-			expect(queryBuilder).to.not.throw();
 			expect(queryBuilder.get.builder.type).to.equal(QueryType.select);
 			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});
@@ -45,7 +44,6 @@ describe('QueryBuilder', () => {
 		it('type should be insert', () => {
 			queryBuilder = queryBuilder.insert('tablename', [{ key: { table: 'tablename', key: 'id' } }], []);
 
-			expect(queryBuilder).to.not.throw();
 			expect(queryBuilder.get.builder.type).to.equal(QueryType.insert);
 			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});
@@ -55,7 +53,6 @@ describe('QueryBuilder', () => {
 		it('type should be update', () => {
 			queryBuilder = queryBuilder.update('tablename', [{ key: { table: 'tablename', key: 'id' } }], []);
 
-			expect(queryBuilder).to.not.throw();
 			expect(queryBuilder.get.builder.type).to.equal(QueryType.update);
 			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});
@@ -65,10 +62,6 @@ describe('QueryBuilder', () => {
 		it('type should be delete', () => {
 			queryBuilder = queryBuilder.delete('tablename');
 
-			console.info(queryBuilder.get);
-			console.log(QueryType);
-
-			expect(queryBuilder).to.not.throw();
 			expect(queryBuilder.get.builder.type).to.equal(QueryType.delete);
 			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});
@@ -78,7 +71,6 @@ describe('QueryBuilder', () => {
 		it('type should be truncate', () => {
 			queryBuilder = queryBuilder.truncate('tablename');
 
-			expect(queryBuilder).to.not.throw();
 			expect(queryBuilder.get.builder.type).to.equal(QueryType.truncate);
 			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});

@@ -5,8 +5,8 @@ import Reference from './Reference';
 
 class Key implements IKey {
 	key: IReference;
-	as?: string;
-	func?: SelectFunction;
+	as?: string = null;
+	func?: SelectFunction = null;
 
 	constructor(key: IReference, as: string = null, func: SelectFunction = null) {
 		this.key = key;
