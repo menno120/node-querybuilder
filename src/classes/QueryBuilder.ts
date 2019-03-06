@@ -76,8 +76,6 @@ class QueryBuilder {
 		this.builder.where = [];
 		this.builder.order = [];
 		this.builder.joins = [];
-
-		return this;
 	}
 
 	/**
@@ -89,7 +87,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	select(tableName: string, keys: IKey[], values: string[]) {
+	select(tableName: string, keys: IKey[], values: string[]): this {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.select;
 		this.builder.keys = keys;
@@ -103,7 +101,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	selectFunc(tableName: string, key: IKey, value: string, func: SelectFunction) {
+	selectFunc(tableName: string, key: IKey, value: string, func: SelectFunction): this {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.select;
 
@@ -122,7 +120,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	insert(tableName: string, keys: IKey[], values: string[]) {
+	insert(tableName: string, keys: IKey[], values: string[]): this {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.insert;
 
@@ -141,7 +139,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	update(tableName: string, keys: IKey[], values: string[]) {
+	update(tableName: string, keys: IKey[], values: string[]): this {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.update;
 
@@ -160,7 +158,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	delete(tableName: string) {
+	delete(tableName: string): this {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.delete;
 
@@ -174,7 +172,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	truncate(tableName: string) {
+	truncate(tableName: string): this {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.truncate;
 
@@ -191,7 +189,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	where(key: Reference, value: string, comparisonOperator: string, type: WhereType) {
+	where(key: Reference, value: string, comparisonOperator: string, type: WhereType): this {
 		this.builder.where.push(new Where(key, value, comparisonOperator, type));
 		return this;
 	}
@@ -207,7 +205,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	whereBetween(key: Reference, min: number, max: number, type: WhereType) {
+	whereBetween(key: Reference, min: number, max: number, type: WhereType): this {
 		this.builder.where.push(new Where(key, null, ComparisonFunctions.Between, type));
 		return this;
 	}
@@ -222,7 +220,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	whereFulltext(key: Reference, value: string, mode: FulltextMode, type: WhereType) {
+	whereFulltext(key: Reference, value: string, mode: FulltextMode, type: WhereType): this {
 		this.builder.where.push(new Where(key, value, ComparisonFunctions.Fulltext, type));
 		return this;
 	}
@@ -232,7 +230,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	join(currentTable: Reference, joinTable: Reference, pos: JoinType) {
+	join(currentTable: Reference, joinTable: Reference, pos: JoinType): this {
 		this.builder.joins.push(new Join(currentTable, joinTable, pos));
 		return this;
 	}
@@ -242,7 +240,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	order(reference: Reference[] | Reference, order: SortOrder) {
+	order(reference: Reference[] | Reference, order: SortOrder): this {
 		this.builder.order.push(new Order(reference, order));
 		return this;
 	}
@@ -252,7 +250,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	limit(amount: number, offset: number = null) {
+	limit(amount: number, offset: number = null): this {
 		this.builder.limit = new Limit(amount, offset);
 		return this;
 	}
@@ -265,7 +263,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	subQuery(query: QueryBuilder, name: string) {
+	subQuery(query: QueryBuilder, name: string): this {
 		return this;
 	}
 
@@ -274,7 +272,7 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	prepare() {
+	prepare(): this | Error {
 		let _query = '';
 
 		switch (this.builder.type) {
@@ -354,9 +352,8 @@ class QueryBuilder {
 
 		return this;
 	}
-	execute() {}
 
-	private createWhereStatements() {
+	private createWhereStatements(): string {
 		let _where = '';
 
 		if (this.debugging) {
@@ -366,7 +363,7 @@ class QueryBuilder {
 		return _where;
 	}
 
-	private createJoinStatements() {
+	private createJoinStatements(): string {
 		let _join = '';
 
 		if (this.debugging) {
@@ -376,7 +373,7 @@ class QueryBuilder {
 		return _join;
 	}
 
-	private createOrderStatements() {
+	private createOrderStatements(): string {
 		let _order = '';
 		let _orders: string[] = [];
 
@@ -400,7 +397,7 @@ class QueryBuilder {
 		return _order + _orders.join(',');
 	}
 
-	private createLimitStatements() {
+	private createLimitStatements(): string {
 		if (this.builder.limit === null) {
 			return '';
 		}
@@ -424,21 +421,21 @@ class QueryBuilder {
 		};
 	}
 
-	private error(error: any) {
+	private error(error: any): Error {
 		console.error(error);
 		throw new Error();
 	}
-	private debug(data: any) {
+	private debug(data: any): void {
 		console.groupCollapsed('QueryBuilder debugger');
 		console.log(data);
 		console.groupEnd();
 	}
 
-	private isReference(key: any) {
+	private isReference(key: any): boolean {
 		return key.constructor.name === 'Reference';
 	}
 
-	private referenceToString(ref: IReference) {
+	private referenceToString(ref: IReference): string {
 		return '`' + ref.table + '`.`' + ref.key + '`';
 	}
 }

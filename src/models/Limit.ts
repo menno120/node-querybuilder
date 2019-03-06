@@ -1,4 +1,4 @@
-import ILimit from '../../interfaces/ILimit';
+import ILimit from '../interfaces/ILimit';
 
 class Limit implements ILimit {
 	readonly offset: number;

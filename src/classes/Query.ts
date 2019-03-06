@@ -467,7 +467,7 @@ class Query {
 		if (key instanceof Reference) {
 			ref = key;
 		} else {
-			ref = new Reference(this.builder.get().builder.table, key);
+			ref = new Reference(this.builder.get.builder.table, key);
 		}
 
 		return ref;

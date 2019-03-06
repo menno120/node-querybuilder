@@ -1,6 +1,6 @@
 import 'mocha';
 import { expect } from 'chai';
-import Reference from '../src/classes/objects/Reference';
+import Reference from '../src/models/Reference';
 import IReference from '../src/interfaces/IReference';
 
 describe('Reference', () => {

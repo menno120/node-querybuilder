@@ -1,7 +1,7 @@
 import 'mocha';
 import { expect } from 'chai';
 import QueryBuilder from '../src/classes/QueryBuilder';
-import Reference from '../src/classes/objects/Reference';
+import Reference from '../src/models/Reference';
 
 describe('QueryBuilder', () => {
 	let querybuilder: QueryBuilder = new QueryBuilder();

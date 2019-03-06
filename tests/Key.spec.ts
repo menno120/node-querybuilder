@@ -1,7 +1,7 @@
 import 'mocha';
 import { expect } from 'chai';
-import Key from '../src/classes/objects/Key';
-import Reference from '../src/classes/objects/Reference';
+import Key from '../src/models/Key';
+import Reference from '../src/models/Reference';
 import { SelectFunction } from '../src/classes/QueryBuilder';
 
 describe('Key', () => {

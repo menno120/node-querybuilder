@@ -1,8 +1,8 @@
 import 'mocha';
 import { expect } from 'chai';
-import Join from '../src/classes/objects/Join';
+import Join from '../src/models/Join';
 import IJoin from '../src/interfaces/IJoin';
-import Reference from '../src/classes/objects/Reference';
+import Reference from '../src/models/Reference';
 import { JoinType } from '../src/helpers';
 
 describe('Join', () => {

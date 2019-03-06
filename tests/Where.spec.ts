@@ -1,7 +1,7 @@
 import 'mocha';
 import { expect } from 'chai';
-import Where from '../src/classes/objects/Where';
-import Reference from '../src/classes/objects/Reference';
+import Where from '../src/models/Where';
+import Reference from '../src/models/Reference';
 import IWhere from '../src/interfaces/IWhere';
 import { ComparisonOperators, WhereType } from '../src/helpers';
 

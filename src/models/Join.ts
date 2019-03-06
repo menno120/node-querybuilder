@@ -1,5 +1,5 @@
-import IJoin from '../../interfaces/IJoin';
-import { JoinType } from '../../helpers';
+import IJoin from '../interfaces/IJoin';
+import { JoinType } from '../helpers';
 import Reference from './Reference';
 
 class Join implements IJoin {

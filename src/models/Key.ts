@@ -1,6 +1,6 @@
-import IKey from '../../interfaces/IKey';
-import { SelectFunction } from '../QueryBuilder';
-import IReference from '../../interfaces/IReference';
+import IKey from '../interfaces/IKey';
+import { SelectFunction } from '../classes/QueryBuilder';
+import IReference from '../interfaces/IReference';
 import Reference from './Reference';
 
 class Key implements IKey {
