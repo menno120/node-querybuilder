@@ -3,7 +3,7 @@ import QueryBuilder, { SelectFunction } from './QueryBuilder';
 
 import { FulltextMode, SortOrder, WhereType, JoinType, reference } from '../helpers';
 
-import Reference from './objects/Reference';
+import Reference from '../models/Reference';
 import IKey from '../interfaces/IKey';
 
 class Query {
@@ -34,6 +34,10 @@ class Query {
 	 */
 	select(table: string, keys: string[] = [], names: string[] = []) {
 		let tmpKeys: IKey[] = [];
+
+		if (names.length !== 0 && keys.length !== names.length) {
+			throw new Error('names array should be equal length as the keys array');
+		}
 
 		keys.forEach((key, i) => {
 			tmpKeys.push({ key: reference(table, key), as: names.length > 0 ? names[i] : null });

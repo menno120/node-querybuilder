@@ -1,4 +1,4 @@
-import Reference from './classes/objects/Reference';
+import Reference from './models/Reference';
 
 export const uuid = () => {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

@@ -3,68 +3,84 @@ import { expect } from 'chai';
 import QueryBuilder, { QueryType } from '../src/classes/QueryBuilder';
 
 describe('QueryBuilder', () => {
-	let querybuilder: QueryBuilder = new QueryBuilder();
+	let queryBuilder: QueryBuilder = new QueryBuilder();
 
 	beforeEach(function() {
-		querybuilder = new QueryBuilder();
+		queryBuilder = new QueryBuilder();
 	});
 
 	describe('constructor', () => {
 		it('should return a valid QueryBuilder object', () => {
-			expect(querybuilder).to.be.instanceOf(QueryBuilder);
-		});
-
-		it('should be in debug mode', () => {
-			expect(new QueryBuilder(true).get().debugging).to.equal(true);
+			expect(queryBuilder).to.be.instanceOf(QueryBuilder);
 		});
 
 		it("shouldn't be in debug mode", () => {
-			expect(new QueryBuilder(false).get().debugging).to.equal(false);
+			expect(queryBuilder.get.debugging).to.equal(false);
+		});
+	});
+
+	describe('constructor', () => {
+		let _queryBuilder = new QueryBuilder(true);
+
+		it('should return a valid QueryBuilder object', () => {
+			expect(_queryBuilder).to.be.instanceOf(QueryBuilder);
+		});
+
+		it('should be in debug mode', () => {
+			expect(_queryBuilder.get.debugging).to.equal(true);
 		});
 	});
 
 	describe('select', () => {
 		it('type should be select', () => {
-			querybuilder.select('tablename', [{ key: { table: 'tablename', key: 'id' } }], []);
+			queryBuilder = queryBuilder.select('tablename', [{ key: { table: 'tablename', key: 'id' } }], []);
 
-			expect(querybuilder.get().builder.type).to.equal(QueryType.select);
-			expect(querybuilder.get().builder.table).to.equal('tablename');
+			expect(queryBuilder).to.not.throw();
+			expect(queryBuilder.get.builder.type).to.equal(QueryType.select);
+			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});
 	});
 
 	describe('insert', () => {
 		it('type should be insert', () => {
-			querybuilder.insert('tablename', [{ key: { table: 'tablename', key: 'id' } }], []);
+			queryBuilder = queryBuilder.insert('tablename', [{ key: { table: 'tablename', key: 'id' } }], []);
 
-			expect(querybuilder.get().builder.type).to.equal(QueryType.insert);
-			expect(querybuilder.get().builder.table).to.equal('tablename');
+			expect(queryBuilder).to.not.throw();
+			expect(queryBuilder.get.builder.type).to.equal(QueryType.insert);
+			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});
 	});
 
 	describe('update', () => {
 		it('type should be update', () => {
-			querybuilder.update('tablename', [{ key: { table: 'tablename', key: 'id' } }], []);
+			queryBuilder = queryBuilder.update('tablename', [{ key: { table: 'tablename', key: 'id' } }], []);
 
-			expect(querybuilder.get().builder.type).to.equal(QueryType.update);
-			expect(querybuilder.get().builder.table).to.equal('tablename');
+			expect(queryBuilder).to.not.throw();
+			expect(queryBuilder.get.builder.type).to.equal(QueryType.update);
+			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});
 	});
 
 	describe('delete', () => {
 		it('type should be delete', () => {
-			querybuilder.delete('tablename');
+			queryBuilder = queryBuilder.delete('tablename');
 
-			expect(querybuilder.get().builder.type).to.equal(QueryType.delete);
-			expect(querybuilder.get().builder.table).to.equal('tablename');
+			console.info(queryBuilder.get);
+			console.log(QueryType);
+
+			expect(queryBuilder).to.not.throw();
+			expect(queryBuilder.get.builder.type).to.equal(QueryType.delete);
+			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});
 	});
 
 	describe('truncate', () => {
 		it('type should be truncate', () => {
-			querybuilder.truncate('tablename');
+			queryBuilder = queryBuilder.truncate('tablename');
 
-			expect(querybuilder.get().builder.type).to.equal(QueryType.truncate);
-			expect(querybuilder.get().builder.table).to.equal('tablename');
+			expect(queryBuilder).to.not.throw();
+			expect(queryBuilder.get.builder.type).to.equal(QueryType.truncate);
+			expect(queryBuilder.get.builder.table).to.equal('tablename');
 		});
 	});
 });

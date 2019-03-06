@@ -1,8 +1,8 @@
-import Join from './objects/Join';
-import Where from './objects/Where';
-import Order from './objects/Order';
-import Limit from './objects/Limit';
-import Reference from './objects/Reference';
+import Join from '../models/Join';
+import Where from '../models/Where';
+import Order from '../models/Order';
+import Limit from '../models/Limit';
+import Reference from '../models/Reference';
 import {
 	JoinType,
 	WhereType,
@@ -34,6 +34,7 @@ export enum SelectFunction {
 
 class QueryBuilder {
 	private debugging: boolean; // Debug mode
+	private query: string = null; // The actual created query, set after prepare() is called
 	private builder: IQueryBuilder = {
 		type: null,
 		table: '',
@@ -44,7 +45,6 @@ class QueryBuilder {
 		joins: [],
 		limit: null
 	};
-	private query: string = null; // The actual created query, set after prepare() is called
 
 	/* {
 		type: QueryType; // Type of query (select,insert,update,delete,truncate)
@@ -76,6 +76,8 @@ class QueryBuilder {
 		this.builder.where = [];
 		this.builder.order = [];
 		this.builder.joins = [];
+
+		return this;
 	}
 
 	/**
@@ -414,7 +416,7 @@ class QueryBuilder {
 		return statement;
 	}
 
-	get() {
+	get get(): { debugging: boolean; builder: IQueryBuilder; query: string } {
 		return {
 			debugging: this.debugging,
 			builder: this.builder,

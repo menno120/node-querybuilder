@@ -13,7 +13,7 @@ describe('QueryBuilder', () => {
 	describe('Select statement', () => {
 		it('should return a valid SQL statement', () => {
 			querybuilder.select('tablename', [{ key: new Reference('tablename', 'table') }], []).prepare();
-			expect(querybuilder.get().query).to.equal('SELECT id FROM tablename');
+			expect(querybuilder.get.query).to.equal('SELECT `tablename`.`table` FROM tablename');
 		});
 	});
 });

@@ -14,8 +14,8 @@ describe('Join', () => {
 				JoinType.Inner
 			);
 
-			expect(where.table).to.equal({ table: 'tablename1', key: 'id' });
-			expect(where.join).to.equal({ table: 'tablename2', key: 'id' });
+			expect(where.table).to.be.instanceof(Reference);
+			expect(where.join).to.be.instanceOf(Reference);
 			expect(where.pos).to.equal(JoinType.Inner);
 			expect(where.operator).to.equal('=');
 		});

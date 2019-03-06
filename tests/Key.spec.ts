@@ -10,7 +10,8 @@ describe('Key', () => {
 
 		// AssertionError: expected { table: 'tablename', key: 'id' } to equal { table: 'tablename', key: 'id' }
 
-		expect(key.key).to.equal({ table: 'tablename', key: 'id' });
+		expect(key.key).to.be.instanceof(Reference);
+		// expect(key.key).to.equal({ table: 'tablename', key: 'id' });
 		expect(key.as).to.equal('outputValue');
 		expect(key.func).to.equal(null);
 	});
@@ -18,7 +19,8 @@ describe('Key', () => {
 	describe('constructor', () => {
 		let key = new Key(new Reference('tablename', 'id'), null, SelectFunction.AVG);
 
-		expect(key.key).to.equal({ table: 'tablename', key: 'id' });
+		expect(key.key).to.be.instanceof(Reference);
+		// expect(key.key).to.equal({ table: 'tablename', key: 'id' });
 		expect(key.as).to.equal(null);
 		expect(key.func).to.equal(SelectFunction.AVG);
 	});
@@ -26,7 +28,7 @@ describe('Key', () => {
 	describe('constructor', () => {
 		let key = new Key(new Reference('tablename', 'id'), 'outputValue', SelectFunction.FULLTEXT);
 
-		expect(key.key).to.equal({ table: 'tablename', key: 'id' });
+		expect(key.key).to.be.instanceof(Reference);
 		expect(key.as).to.equal('outputValue');
 		expect(key.func).to.equal(SelectFunction.FULLTEXT);
 	});

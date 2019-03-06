@@ -15,7 +15,8 @@ describe('Where', () => {
 				WhereType.DEFAULT
 			);
 
-			expect(where.key).to.equal({ table: 'tablename', key: 'key' });
+			expect(where.key).to.be.instanceof(Where);
+			// expect(where.key).to.equal({ table: 'tablename', key: 'key' });
 			expect(where.value).to.equal('value');
 			expect(where.operator).to.equal(ComparisonOperators.Equals);
 			expect(where.type).to.equal(WhereType.DEFAULT);

@@ -1,8 +1,8 @@
 import { QueryType } from '../classes/QueryBuilder';
-import Where from '../classes/objects/Where';
-import Order from '../classes/objects/Order';
-import Join from '../classes/objects/Join';
-import Limit from '../classes/objects/Limit';
+import Where from '../models/Where';
+import Order from '../models/Order';
+import Join from '../models/Join';
+import Limit from '../models/Limit';
 import IKey from './IKey';
 
 interface IQueryBuilder {
