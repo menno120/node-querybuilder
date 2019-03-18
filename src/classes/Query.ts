@@ -2,6 +2,7 @@ import DatabaseConnection from './DatabaseConnection';
 import QueryBuilder, { SelectFunction } from './QueryBuilder';
 
 import { FulltextMode, SortOrder, WhereType, JoinType, reference } from '../helpers';
+import { NoInitialWhereClause, UnequalAmountOfKeysAndValues, DuplicateInitialWhereClause } from '../Errors';
 
 import Reference from '../models/Reference';
 import IKey from '../interfaces/IKey';
@@ -53,16 +54,20 @@ class Query {
 	 * Adds a row into the database
 	 *
 	 * @param  {string}		table 				Name of the table you want to select something from
-	 * @param  {string[]}  	[keys=[]]  			The keys for the items you want to insert
-	 * @param  {string[]} 	[values=[]] 		The actual values you want to insert
+	 * @param  {string[]}  	keys  				The keys for the items you want to insert
+	 * @param  {string[]} 	values 				The actual values you want to insert
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	insert(table: string, keys: string[], values: string[] = []): this {
+	insert(table: string, keys: string[], values: string[]): this {
 		let tmpKeys: IKey[] = [];
 
+		if (keys.length !== values.length) {
+			throw new UnequalAmountOfKeysAndValues();
+		}
+
 		keys.forEach((key) => {
-			tmpKeys.push({ key: reference(table, key) });
+			tmpKeys.push({ key: reference(table, key), as: null, func: null });
 		});
 
 		this.builder = this.builder.insert(table, tmpKeys, values);
@@ -74,13 +79,17 @@ class Query {
 	 * Update a row in the database
 	 *
 	 * @param  {string} 	table				Name of the table you want to select something from
-	 * @param  {string[]}  	[keys=[]] 			The keys for the items you want to update
-	 * @param  {string[]} 	[values=[]] 		The actual values you want to update
+	 * @param  {string[]}  	keys 				The keys for the items you want to update
+	 * @param  {string[]} 	values 				The actual values you want to update
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	update(table: string, keys: string[], values: string[] = []): this {
+	update(table: string, keys: string[], values: string[]): this {
 		let tmpKeys: IKey[] = [];
+
+		if (keys.length !== values.length) {
+			throw new UnequalAmountOfKeysAndValues();
+		}
 
 		keys.forEach((key) => {
 			tmpKeys.push({ key: reference(table, key) });
@@ -202,6 +211,10 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	where(key: string | Reference, value: string, operator = '='): this {
+		if (this.builder.where.length > 0) {
+			new DuplicateInitialWhereClause();
+		}
+
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.DEFAULT);
 		return this;
 	}
@@ -217,6 +230,10 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	orWhere(key: string | Reference, value: string, operator = '='): this {
+		if (this.builder.where.length === 0) {
+			new NoInitialWhereClause();
+		}
+
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.OR);
 		return this;
 	}
@@ -232,6 +249,10 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	andWhere(key: string | Reference, value: string, operator = '='): this {
+		if (this.builder.where.length === 0) {
+			new NoInitialWhereClause();
+		}
+
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.AND);
 		return this;
 	}
@@ -246,6 +267,10 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	whereFulltext(key: string | Reference, value: string, mode: FulltextMode): this {
+		if (this.builder.where.length > 0) {
+			new DuplicateInitialWhereClause();
+		}
+
 		this.builder = this.builder.whereFulltext(this.convertKeyToReference(key), value, mode, WhereType.DEFAULT);
 		return this;
 	}
@@ -260,6 +285,10 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	orWhereFulltext(key: string | Reference, value: string, mode: FulltextMode): this {
+		if (this.builder.where.length === 0) {
+			new NoInitialWhereClause();
+		}
+
 		this.builder = this.builder.whereFulltext(this.convertKeyToReference(key), value, mode, WhereType.OR);
 		return this;
 	}
@@ -274,6 +303,10 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	andWhereFulltext(key: string | Reference, value: string, mode: FulltextMode): this {
+		if (this.builder.where.length === 0) {
+			new NoInitialWhereClause();
+		}
+
 		this.builder = this.builder.whereFulltext(this.convertKeyToReference(key), value, mode, WhereType.AND);
 		return this;
 	}
@@ -288,6 +321,10 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	whereBetween(key: string | Reference, min: number, max: number): this {
+		if (this.builder.where.length > 0) {
+			new DuplicateInitialWhereClause();
+		}
+
 		this.builder = this.builder.whereBetween(this.convertKeyToReference(key), min, max, WhereType.DEFAULT);
 		return this;
 	}
@@ -302,6 +339,10 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	orWhereBetween(key: string | Reference, min: number, max: number): this {
+		if (this.builder.where.length === 0) {
+			new NoInitialWhereClause();
+		}
+
 		this.builder = this.builder.whereBetween(this.convertKeyToReference(key), min, max, WhereType.OR);
 		return this;
 	}
@@ -316,6 +357,10 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	andWhereBetween(key: string | Reference, min: number, max: number): this {
+		if (this.builder.where.length === 0) {
+			new NoInitialWhereClause();
+		}
+
 		this.builder = this.builder.whereBetween(this.convertKeyToReference(key), min, max, WhereType.AND);
 		return this;
 	}
@@ -351,9 +396,9 @@ class Query {
 	/**
 	 * Adds a inner join to the SQL query
 	 *
-	 * @param  {string} 	table    			The table you want to join
-	 * @param  {string} 	key      			The key to compare
-	 * @param  {string} 	value    			The value to compare the key to
+	 * @param  {string} 			table    	The table you want to join
+	 * @param  {string} 			key      	The key to compare
+	 * @param  {string|Reference} 	value    	The value to compare the key to
 	 *
 	 * @return {object} - Current instance of the Query
 	 */

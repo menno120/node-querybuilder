@@ -7,7 +7,7 @@ import { JoinType } from '../src/helpers';
 
 describe('Join', () => {
 	describe('constructor', () => {
-		it('should return a valid IJoin object', () => {
+		it('should return a valid Join object', () => {
 			let where: IJoin = new Join(
 				new Reference('tablename1', 'id'),
 				new Reference('tablename2', 'id'),

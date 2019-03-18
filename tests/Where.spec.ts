@@ -7,7 +7,7 @@ import { ComparisonOperators, WhereType } from '../src/helpers';
 
 describe('Where', () => {
 	describe('constructor', () => {
-		it('should return a valid IWhere object', () => {
+		it('should return a valid Where object', () => {
 			let where: IWhere = new Where(
 				new Reference('tablename', 'key'),
 				'value',

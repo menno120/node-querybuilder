@@ -5,7 +5,7 @@ import IReference from '../src/interfaces/IReference';
 
 describe('Reference', () => {
 	describe('constructor', () => {
-		it('should return a valid IWhere object', () => {
+		it('should return a valid Reference object', () => {
 			let where: IReference = new Reference('tablename', 'key');
 
 			expect(where.table).to.equal('tablename');
