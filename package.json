@@ -4,6 +4,7 @@
 	"description": "Node QueryBuilder for a MySQL server",
 	"author": "Menno (https://github.com/menno120)",
 	"license": "MIT",
+	"types": "dist/index.d.ts",
 	"private": true,
 	"scripts": {
 		"build": "webpack --config webpack.config.js",
