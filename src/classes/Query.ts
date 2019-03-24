@@ -137,8 +137,7 @@ class Query {
 		this.builder = this.builder.selectFunc(
 			table,
 			{ key: reference(table, key), func: SelectFunction.COUNT, as: keyName },
-			keyName,
-			SelectFunction.COUNT
+			keyName
 		);
 
 		return this;
@@ -157,8 +156,7 @@ class Query {
 		this.builder = this.builder.selectFunc(
 			table,
 			{ key: reference(table, key), func: SelectFunction.AVG, as: keyName },
-			keyName,
-			SelectFunction.AVG
+			keyName
 		);
 
 		return this;
@@ -178,8 +176,7 @@ class Query {
 		this.builder = this.builder.selectFunc(
 			table,
 			{ key: reference(table, sum), func: SelectFunction.SUM, as: keyName },
-			keyName,
-			SelectFunction.SUM
+			keyName
 		);
 
 		return this;
@@ -189,15 +186,21 @@ class Query {
 	 * Adds a fulltext statement to the SQL query
 	 *
 	 * @param  {string} 			index      			The fulltext index you want to check, example: 'title,body'
-	 * @param  {string} 			value    			The keywords to search for
+	 * @param  {string} 			text    			The keywords to search for
 	 * @param  {FulltextMode} 	    mode		    	The fulltext mode (NATURAL LANGUAGE or BOOLEAN)
 	 * @param  {string}				[keyName=score]		Name of the key
+	 * @param  {string}				[table=null]		The table where the key is located, will default to the current table if NULL
 	 *
 	 * @return {object} - Current instance of the Query
 	 */
-	fulltext(index: string, value: string, mode: FulltextMode, keyName = 'score'): this {
-		// @todo: this should use the selectFunc with SelectionFunction.Fulltext
-		// this.builder = this.builder.fulltext(index, value, mode, keyName);
+	fulltext(index: string, text: string, mode: FulltextMode, keyName = 'score', table: string = null): this {
+		this.builder = this.builder.selectFunc(
+			table !== null ? table : '',
+			{ key: reference('', index), func: SelectFunction.FULLTEXT, as: keyName },
+			text,
+			mode
+		);
+
 		return this;
 	}
 
@@ -211,8 +214,8 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	where(key: string | Reference, value: string, operator = '='): this {
-		if (this.builder.where.length > 0) {
-			new DuplicateInitialWhereClause();
+		if (this.builder.where.length >= 1) {
+			throw new DuplicateInitialWhereClause();
 		}
 
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.DEFAULT);
@@ -231,7 +234,7 @@ class Query {
 	 */
 	orWhere(key: string | Reference, value: string, operator = '='): this {
 		if (this.builder.where.length === 0) {
-			new NoInitialWhereClause();
+			throw new NoInitialWhereClause();
 		}
 
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.OR);
@@ -250,7 +253,7 @@ class Query {
 	 */
 	andWhere(key: string | Reference, value: string, operator = '='): this {
 		if (this.builder.where.length === 0) {
-			new NoInitialWhereClause();
+			throw new NoInitialWhereClause();
 		}
 
 		this.builder = this.builder.where(this.convertKeyToReference(key), value, operator, WhereType.AND);
@@ -268,7 +271,7 @@ class Query {
 	 */
 	whereFulltext(key: string | Reference, value: string, mode: FulltextMode): this {
 		if (this.builder.where.length > 0) {
-			new DuplicateInitialWhereClause();
+			throw new DuplicateInitialWhereClause();
 		}
 
 		this.builder = this.builder.whereFulltext(this.convertKeyToReference(key), value, mode, WhereType.DEFAULT);
@@ -286,7 +289,7 @@ class Query {
 	 */
 	orWhereFulltext(key: string | Reference, value: string, mode: FulltextMode): this {
 		if (this.builder.where.length === 0) {
-			new NoInitialWhereClause();
+			throw new NoInitialWhereClause();
 		}
 
 		this.builder = this.builder.whereFulltext(this.convertKeyToReference(key), value, mode, WhereType.OR);
@@ -304,7 +307,7 @@ class Query {
 	 */
 	andWhereFulltext(key: string | Reference, value: string, mode: FulltextMode): this {
 		if (this.builder.where.length === 0) {
-			new NoInitialWhereClause();
+			throw new NoInitialWhereClause();
 		}
 
 		this.builder = this.builder.whereFulltext(this.convertKeyToReference(key), value, mode, WhereType.AND);
@@ -322,7 +325,7 @@ class Query {
 	 */
 	whereBetween(key: string | Reference, min: number, max: number): this {
 		if (this.builder.where.length > 0) {
-			new DuplicateInitialWhereClause();
+			throw new DuplicateInitialWhereClause();
 		}
 
 		this.builder = this.builder.whereBetween(this.convertKeyToReference(key), min, max, WhereType.DEFAULT);
@@ -340,7 +343,7 @@ class Query {
 	 */
 	orWhereBetween(key: string | Reference, min: number, max: number): this {
 		if (this.builder.where.length === 0) {
-			new NoInitialWhereClause();
+			throw new NoInitialWhereClause();
 		}
 
 		this.builder = this.builder.whereBetween(this.convertKeyToReference(key), min, max, WhereType.OR);
@@ -358,7 +361,7 @@ class Query {
 	 */
 	andWhereBetween(key: string | Reference, min: number, max: number): this {
 		if (this.builder.where.length === 0) {
-			new NoInitialWhereClause();
+			throw new NoInitialWhereClause();
 		}
 
 		this.builder = this.builder.whereBetween(this.convertKeyToReference(key), min, max, WhereType.AND);

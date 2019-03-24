@@ -15,7 +15,6 @@ import {
 } from '../helpers';
 import IQueryBuilder from '../interfaces/IQueryBuilder';
 import IReference from '../interfaces/IReference';
-import { read } from 'fs';
 import IKey from '../interfaces/IKey';
 
 export enum QueryType {
@@ -101,11 +100,12 @@ class QueryBuilder {
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */
-	selectFunc(tableName: string, key: IKey, value: string, func: SelectFunction): this {
+	selectFunc(tableName: string, key: IKey, value: string, mode: FulltextMode = null): this {
 		this.builder.table = tableName;
 		this.builder.type = QueryType.select;
 
-		// @todo add keys and values
+		this.builder.keys.push(key);
+		this.builder.values.push(value);
 
 		return this;
 	}

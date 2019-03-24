@@ -157,11 +157,13 @@ describe('Query', () => {
 		it('should set the parameters', () => {
 			let query = new Query().count('table', 'id', 'count_value');
 
-			expect(query.builder.get.builder.keys).to.deep.equal({
-				key: reference('table', 'id'),
-				func: SelectFunction.COUNT,
-				as: 'count_value'
-			});
+			expect(query.builder.get.builder.keys).to.deep.equal([
+				{
+					key: reference('table', 'id'),
+					func: SelectFunction.COUNT,
+					as: 'count_value'
+				}
+			]);
 		});
 
 		it('should set a default keyName', () => {
@@ -181,11 +183,13 @@ describe('Query', () => {
 		it('should set the parameters', () => {
 			let query = new Query().avg('table', 'id', 'avg_value');
 
-			expect(query.builder.get.builder.keys).to.deep.equal({
-				key: reference('table', 'id'),
-				func: SelectFunction.AVG,
-				as: 'avg_value'
-			});
+			expect(query.builder.get.builder.keys).to.deep.equal([
+				{
+					key: reference('table', 'id'),
+					func: SelectFunction.AVG,
+					as: 'avg_value'
+				}
+			]);
 		});
 
 		it('should set a default keyName', () => {
@@ -205,11 +209,13 @@ describe('Query', () => {
 		it('should set the parameters', () => {
 			let query = new Query().sum('table', 'id', 'sum_value');
 
-			expect(query.builder.get.builder.keys).to.deep.equal({
-				key: reference('table', 'id'),
-				func: SelectFunction.AVG,
-				as: 'sum_value'
-			});
+			expect(query.builder.get.builder.keys).to.deep.equal([
+				{
+					key: reference('table', 'id'),
+					func: SelectFunction.SUM,
+					as: 'sum_value'
+				}
+			]);
 		});
 
 		it('should set a default keyName', () => {
@@ -221,75 +227,31 @@ describe('Query', () => {
 
 	describe('fulltext', () => {
 		it('should be of type select', () => {
-			let query = new Query().fulltext('table', 'id', FulltextMode.BooleanMode);
+			let query = new Query().fulltext('title,body', 'lorem ipsum', FulltextMode.BooleanMode);
 
 			expect(query.builder.get.builder.type).to.equal(QueryType.select);
 		});
 
 		it('should set the parameters', () => {
-			let query = new Query().fulltext('table', 'id', FulltextMode.BooleanMode);
+			let query = new Query().fulltext('title,body', 'lorem ipsum', FulltextMode.BooleanMode);
 
-			expect(query.builder.get.builder.keys).to.deep.equal({
-				key: reference('table', 'id'),
-				func: SelectFunction.FULLTEXT
-			});
+			expect(query.builder.get.builder.keys).to.deep.equal([
+				{
+					key: reference('', 'title,body'),
+					func: SelectFunction.FULLTEXT,
+					as: 'score'
+				}
+			]);
 		});
 
 		it('should set a default keyName', () => {
-			let query = new Query().sum('table', 'id');
+			let query = new Query().fulltext('title,body', 'lorem ipsum', FulltextMode.BooleanMode);
 
-			expect(query.builder.get.builder.keys[0].as).to.equal('score');
+			expect(query.builder.get.builder.keys[0].as).to.deep.equal('score');
 		});
 	});
 
-	describe('where', () => {
-		it('should set the table column', () => {
-			let query = new Query().select('table', ['id', 'name']).where('id', '1');
-			console.log(query.builder.where);
-
-			expect(query.builder.get.builder.where[0]).to.deep.equal([
-				{ key: reference('table', 'id'), value: '1', operator: '=', type: WhereType.DEFAULT }
-			]);
-		});
-
-		it('should create a valid reference', () => {
-			let query = new Query().select('table', ['id', 'name']).where('id', '1');
-
-			expect(query.builder.get.builder.where[0]).to.equal([
-				{ key: reference('table', 'id'), value: '1', operator: '=', type: WhereType.DEFAULT }
-			]);
-		});
-
-		it('should set the correct compare value', () => {
-			let query = new Query().select('table', ['id', 'name']).where('id', '1');
-
-			expect(query.builder.get.builder.where[0]).to.equal([
-				{ key: reference('table', 'id'), value: '1', operator: '=', type: WhereType.DEFAULT }
-			]);
-		});
-
-		it('should set the default comparison operator', () => {
-			let query = new Query().select('table', ['id', 'name']).where('id', '1');
-
-			expect(query.builder.get.builder.where[0]).to.equal([
-				{ key: reference('table', 'id'), value: '1', operator: '=', type: WhereType.DEFAULT }
-			]);
-		});
-
-		it('should set the default comparison operator', () => {
-			let query = new Query().select('table', ['id', 'name']).where('id', '1', '=');
-
-			expect(query.builder.get.builder.where[0].operator).to.equal('=');
-		});
-
-		// it('should set the default comparison operator', () => {
-		// 	let query = new Query().select('table', ['id', 'name']).where('id', '1', '=');
-
-		// 	expect(query.builder.get.builder.where[0]).to.equal([
-		// 		{ key: reference('table', 'id'), value: '1', operator: '=', type: WhereType.DEFAULT }
-		// 	]);
-		// });
-	});
+	describe('where', () => {});
 	describe('orWhere', () => {});
 	describe('andWhere', () => {});
 	describe('whereFulltext', () => {});
