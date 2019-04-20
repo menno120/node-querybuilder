@@ -13,6 +13,9 @@ class Query {
 	builder: QueryBuilder;
 	databaseConnection: DatabaseConnection = null;
 
+	_transaction: boolean = false;
+	_transactionQueries: Query[] = [];
+
 	/**
 	 * Constructor
 	 *
@@ -475,6 +478,11 @@ class Query {
 	 * @return {object} - Current instance of the Query
 	 */
 	prepare(): this {
+		if (this._transaction === true) {
+			// @todo: prepare all transactions here ...
+			return;
+		}
+
 		let _builder = this.builder.prepare();
 
 		if (_builder instanceof QueryBuilder) {
@@ -514,6 +522,13 @@ class Query {
 	 */
 	go(): Promise<Function> {
 		return this.prepare().execute();
+	}
+
+	transaction(queries: Query[]): this {
+		this._transaction = true;
+		this._transactionQueries = queries;
+
+		return this;
 	}
 
 	private convertKeyToReference(key: string | Reference) {

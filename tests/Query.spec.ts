@@ -4,15 +4,22 @@ import Query from '../src/classes/Query';
 import { QueryType, SelectFunction } from '../src/classes/QueryBuilder';
 import Reference from '../src/models/Reference';
 import Key from '../src/models/Key';
-import { FulltextMode, reference, WhereType } from '../src/helpers';
+import { FulltextMode, reference } from '../src/helpers';
 
 describe('Query', () => {
-	describe('constructor', () => {
-		// @todo
-	});
-
 	config.showDiff = true;
 	config.truncateThreshold = 0;
+
+	describe('constructor', () => {
+		it('should set the debug mode', () => {
+			const value = true;
+
+			let query = new Query();
+
+			expect(query.debug).to.deep.equal(value);
+			expect(query.builder.get.debugging).to.deep.equal(value);
+		});
+	});
 
 	describe('select', () => {
 		it('should be of type select', () => {
@@ -270,6 +277,28 @@ describe('Query', () => {
 	describe('prepare', () => {});
 	describe('execute', () => {});
 	describe('go', () => {});
+
+	describe('transaction', () => {
+		it('should set transaction', () => {
+			const value = true;
+
+			let query = new Query().transaction([]);
+
+			expect(query._transaction).to.equal(value);
+		});
+
+		it('should fill the queries array', () => {
+			const values = [
+				new Query().select('tablename', ['keyname']),
+				new Query().select('tablename', ['keyname']),
+				new Query().select('tablename', ['keyname'])
+			];
+
+			let query = new Query().transaction(values);
+
+			expect(query._transactionQueries).to.deep.equal(values);
+		});
+	});
 
 	// Private functions
 	describe('convertKeyToReference', () => {});
