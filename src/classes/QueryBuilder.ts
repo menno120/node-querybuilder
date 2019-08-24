@@ -153,8 +153,6 @@ class QueryBuilder {
 	 * Delete statement
 	 *
 	 * @param  {string}     tableName       Table name to select data from
-	 * @param  {string[]}   keys  		    The items you want tot select
-	 * @param  {string[]} 	names 		    Key name of the value
 	 *
 	 * @return {object} - Current instance of the QueryBuilder
 	 */

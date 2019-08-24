@@ -251,7 +251,61 @@ describe('Query', () => {
 		});
 	});
 
-	describe('where', () => {});
+	describe('where', () => {
+		it('should set the table column', () => {
+			let query = new Query().select('table', ['id', 'name']);
+			query = query.where('id', '1');
+
+			expect(query.builder.get.builder.where).to.be.lengthOf(1);
+			expect(query.builder.get.builder.where).to.deep.equal([
+				{ key: reference('table', 'id'), value: '1', operator: '=', type: WhereType.DEFAULT }
+			]);
+		});
+
+		it('should create a valid reference', () => {
+			let query = new Query().select('table', ['id', 'name']);
+			query = query.where('id', '1');
+
+			expect(query.builder.get.builder.where).to.be.lengthOf(1);
+			expect(query.builder.get.builder.where).to.deep.equal([
+				{ key: reference('table', 'id'), value: '1', operator: '=', type: WhereType.DEFAULT }
+			]);
+		});
+
+		it('should set the correct compare value', () => {
+			const query = new Query().select('table', ['id', 'name']).where('id', '1');
+
+			expect(query.builder.get.builder.where).to.be.lengthOf(1);
+			expect(query.builder.get.builder.where).to.deep.equal([
+				{ key: reference('table', 'id'), value: '1', operator: '=', type: WhereType.DEFAULT }
+			]);
+		});
+
+		it('should set the default comparison operator', () => {
+			const query = new Query().select('table', ['id', 'name']).where('id', '1');
+
+			expect(query.builder.get.builder.where).to.be.lengthOf(1);
+			expect(query.builder.get.builder.where).to.deep.equal([
+				{ key: reference('table', 'id'), value: '1', operator: '=', type: WhereType.DEFAULT }
+			]);
+		});
+
+		it('should set the default comparison operator', () => {
+			const query = new Query().select('table', ['id', 'name']).where('id', '1', '=');
+
+			expect(query.builder.get.builder.where).to.be.lengthOf(1);
+			expect(query.builder.get.builder.where[0].operator).to.deep.equal('=');
+		});
+
+		it('should throw an exception with multiple where clauses', () => {
+			expect(() =>
+				new Query()
+					.select('table', ['id', 'name'])
+					.where('id', '1', '=')
+					.where('id', '1', '=')
+			).to.throw('There already was an initial where clause!');
+		});
+	});
 	describe('orWhere', () => {});
 	describe('andWhere', () => {});
 	describe('whereFulltext', () => {});

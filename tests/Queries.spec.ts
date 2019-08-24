@@ -1,19 +1,39 @@
 import 'mocha';
 import { expect } from 'chai';
 import QueryBuilder from '../src/classes/QueryBuilder';
+import Query from '../src/classes/Query';
 import Reference from '../src/models/Reference';
 
-describe('QueryBuilder', () => {
-	let querybuilder: QueryBuilder = new QueryBuilder();
+describe('Sample queries', () => {
+	let query: Query = new Query();
 
 	beforeEach(function() {
-		querybuilder = new QueryBuilder();
+		query = new Query();
 	});
 
-	describe('Select statement', () => {
+	describe('Basic SELECT statement', () => {
 		it('should return a valid SQL statement', () => {
-			querybuilder.select('tablename', [{ key: new Reference('tablename', 'table') }], []).prepare();
-			expect(querybuilder.get.query).to.equal('SELECT `tablename`.`table` FROM tablename');
+			query.select('tablename', [new Reference('tablename', 'table')], []).prepare();
+			expect(query.getRawQuery).to.equal('SELECT `tablename`.`table` FROM tablename');
+		});
+	});
+
+	describe('Basic UPDATE statement', () => {
+		it('should return a valid SQL statement', () => {
+			query.select('tablename', [new Reference('tablename', 'table')], []).prepare();
+			expect(query.getRawQuery).to.equal('SELECT `tablename`.`table` FROM tablename');
+		});
+	});
+
+	describe('Basic DELETE statement', () => {
+		it('should return a valid SQL statement', () => {
+			query
+				.delete('tablename')
+				.where(new Reference('tablename', 'table'), 'test')
+				.prepare();
+			expect(query.getRawQuery).to.equal(
+				"DELETE `tablename`.`table` FROM tablename WHERE tablename.table = 'test'"
+			);
 		});
 	});
 });
