@@ -26,3 +26,6 @@ typings/
 
 # Build directory
 dist/
+
+# Docs
+docs/

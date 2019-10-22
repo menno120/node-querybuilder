@@ -16,6 +16,7 @@ import {
 import IQueryBuilder from '../interfaces/IQueryBuilder';
 import IReference from '../interfaces/IReference';
 import IKey from '../interfaces/IKey';
+import IJoin from '../interfaces/IJoin';
 
 export enum QueryType {
 	select,
@@ -46,14 +47,14 @@ class QueryBuilder {
 	};
 
 	/* {
-		type: QueryType; // Type of query (select,insert,update,delete,truncate)
-		table: string; // Table name to select from
-		keys: string[]; // Keys to select
-		values: string[]; // Names for the keys
-		where: Where[]; // Where clauses
-		order: Order[]; // Order clauses
-		joins: Join[]; // Join clauses
-		limit: Limit; // Limit
+		type: QueryType; 	// Type of query (select,insert,update,delete,truncate)
+		table: string; 		// Table name to select from
+		keys: string[]; 	// Keys to select
+		values: string[]; 	// Names for the keys
+		where: Where[]; 	// Where clauses
+		order: Order[]; 	// Order clauses
+		joins: Join[]; 		// Join clauses
+		limit: Limit; 		// Limit
 
 		_query: string; // The actual created query, set after prepare() is called
 	}; */
@@ -265,6 +266,10 @@ class QueryBuilder {
 		return this;
 	}
 
+	// --------------------------------------------------
+	// Query build functions
+	// --------------------------------------------------
+
 	/**
 	 * ...
 	 *
@@ -329,7 +334,7 @@ class QueryBuilder {
 				break;
 
 			case QueryType.delete:
-				_query = 'DELETE ' + this.builder.table;
+				_query = 'DELETE FROM ' + this.builder.table;
 				break;
 
 			case QueryType.truncate:
@@ -355,13 +360,75 @@ class QueryBuilder {
 	}
 
 	private createWhereStatements(): string {
-		let _where = '';
+		let _where = [];
+		let blocks: string[] = [];
+		let queryBlocks: string[] = [];
+
+		if (this.builder.where.length > 0) {
+			_where.push('WHERE');
+
+			// Store the previous where type for later reference
+			var prevType: WhereType = WhereType.DEFAULT;
+
+			// Loop through all the where elements
+			this.builder.where.forEach((where, index: number) => {
+				// Append the 'AND' or 'OR' between the blocks
+				if (index > 0) {
+					switch (where.type) {
+						case WhereType.AND:
+							_where.push('AND');
+							break;
+
+						case WhereType.OR:
+							_where.push('OR');
+							break;
+
+						default:
+							_where.push('AND');
+							break;
+					}
+				}
+
+				// Wrap the value as a string if it's not an bool or int
+				const val = (value: any) => {
+					if (typeof value === 'boolean' || typeof value === 'bigint' || typeof value === 'number') {
+						return value;
+					} else {
+						return `'${value}'`;
+					}
+				};
+
+				// Create the following parts from the block: `<table>.<key> <operator> <value>`
+				var query = this.referenceToString(where.key) + ' ' + where.operator + ' ' + val(where.value);
+
+				// Add the query
+				queryBlocks.push(query);
+
+				// Wrap the query elements
+				if (prevType === where.type || prevType === WhereType.DEFAULT) {
+					blocks.push(queryBlocks.join(' '));
+				} else {
+					blocks.push(`(${queryBlocks.join(' ')})`);
+				}
+
+				prevType = where.type;
+			});
+
+			console.log(_where);
+			console.log(blocks);
+
+			var query = _where
+				.map((type, index) => {
+					return `${type} ${blocks[index]}`;
+				})
+				.join(' ');
+		}
 
 		if (this.debugging) {
 			this.debug(_where);
 		}
 
-		return _where;
+		return query;
 	}
 
 	private createJoinStatements(): string {
@@ -370,6 +437,20 @@ class QueryBuilder {
 		if (this.debugging) {
 			this.debug(_join);
 		}
+
+		_join = this.builder.joins
+			.map((join: Join) => {
+				return (
+					join.pos +
+					' JOIN ' +
+					this.referenceToString(join.table) +
+					' ' +
+					join.operator +
+					' ' +
+					this.referenceToString(join.join)
+				);
+			})
+			.join(' ');
 
 		return _join;
 	}

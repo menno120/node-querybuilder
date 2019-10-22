@@ -4,17 +4,26 @@ import Query from '../src/classes/Query';
 import { QueryType, SelectFunction } from '../src/classes/QueryBuilder';
 import Reference from '../src/models/Reference';
 import Key from '../src/models/Key';
-import { FulltextMode, reference } from '../src/helpers';
+import { FulltextMode, reference, WhereType } from '../src/helpers';
 
 describe('Query', () => {
 	config.showDiff = true;
 	config.truncateThreshold = 0;
 
 	describe('constructor', () => {
-		it('should set the debug mode', () => {
+		it('should set the debug mode to true', () => {
 			const value = true;
 
-			let query = new Query();
+			let query = new Query(true);
+
+			expect(query.debug).to.deep.equal(value);
+			expect(query.builder.get.debugging).to.deep.equal(value);
+		});
+
+		it('should set the debug mode to false', () => {
+			const value = false;
+
+			let query = new Query(false);
 
 			expect(query.debug).to.deep.equal(value);
 			expect(query.builder.get.debugging).to.deep.equal(value);
@@ -313,28 +322,46 @@ describe('Query', () => {
 			).to.throw('There already was an initial where clause!');
 		});
 	});
+
 	describe('orWhere', () => {});
+
 	describe('andWhere', () => {});
+
 	describe('whereFulltext', () => {});
+
 	describe('orWhereFulltext', () => {});
+
 	describe('andWhereFulltext', () => {});
+
 	describe('whereBetween', () => {});
+
 	describe('orWhereBetween', () => {});
+
 	describe('andWhereBetween', () => {});
+
 	describe('leftJoin', () => {});
+
 	describe('rightJoin', () => {});
+
 	describe('innerJoin', () => {});
+
 	describe('limit', () => {});
+
 	describe('orderBy', () => {});
+
 	describe('subQuery', () => {});
+
 	describe('raw', () => {});
+
 	describe('prepare', () => {});
+
 	describe('execute', () => {});
+
 	describe('go', () => {});
 
 	describe('transaction', () => {
 		it('should set transaction', () => {
-			const value = true;
+			const value = false;
 
 			let query = new Query().transaction([]);
 

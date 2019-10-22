@@ -53,9 +53,9 @@ class Query {
 				throw new Error('Names array should be equal length as the keys array!');
 			}
 
-			(<string[] | IReference[]>keys).forEach((key: any, i) => {
+			(<string[] | IReference[]>keys).forEach((key: any, i: number) => {
 				if (typeof key === 'string') {
-					tmpKeys.push(new Key(reference(table, <string>key), names.length > 0 ? names[i] : null, null)); // { key: , as: , func:  });
+					tmpKeys.push(new Key(reference(table, <string>key), names.length > 0 ? names[i] : null, null));
 				} else {
 					tmpKeys.push(new Key(<IReference>key, names.length > 0 ? names[i] : null, null));
 				}
@@ -541,7 +541,7 @@ class Query {
 		});
 	}
 
-	getRawQuery(): QueryBuilder {
+	getRawQuery(): string {
 		let _builder = this.builder.prepare();
 
 		if (_builder instanceof QueryBuilder) {
@@ -550,7 +550,7 @@ class Query {
 			throw new Error('Failed to prepare query');
 		}
 
-		return this.builder;
+		return this.builder.get.query;
 	}
 
 	/**

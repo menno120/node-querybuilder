@@ -13,9 +13,9 @@ export const reference = (tablename: string, key: string) => {
 };
 
 export enum JoinType {
-	Left,
-	Right,
-	Inner
+	Left = 'LEFT',
+	Right = 'RIGHT',
+	Inner = 'INNER'
 }
 
 export enum WhereType {
